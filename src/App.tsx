@@ -469,6 +469,7 @@ export default function App() {
             timetableTitle={timetableTitle} setTimetableTitle={setTimetableTitle}
             timetableSubtitle={timetableSubtitle} setTimetableSubtitle={setTimetableSubtitle}
             startDate={startDate} endDate={endDate}
+            skipWeekends={skipWeekends}
             modules={modules}
             exportToPNG={exportToPNG}
             exportToPDF={exportToPDF}

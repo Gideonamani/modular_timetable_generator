@@ -23,6 +23,7 @@ interface TimetablePreviewProps {
   exportToCSV: () => void;
   exportToICS: () => void;
   isDarkMode: boolean;
+  skipWeekends: boolean;
 }
 
 export function TimetablePreview({
@@ -32,7 +33,7 @@ export function TimetablePreview({
   startDate, endDate,
   modules,
   exportToPNG, exportToPDF, exportToCSV, exportToICS,
-  isDarkMode
+  isDarkMode, skipWeekends
 }: TimetablePreviewProps) {
   
   const renderGridView = () => {
@@ -44,12 +45,18 @@ export function TimetablePreview({
     const start = startOfWeek(firstDay, { weekStartsOn: 1 }); // Monday start
     const end = endOfWeek(lastDay, { weekStartsOn: 1 });
     
-    const calendarDays = eachDayOfInterval({ start, end });
+    let calendarDays = eachDayOfInterval({ start, end });
+    let displayDays = WEEKDAYS;
+
+    if (skipWeekends) {
+      calendarDays = calendarDays.filter(d => d.getDay() !== 0 && d.getDay() !== 6);
+      displayDays = WEEKDAYS.slice(0, 5); // Monday to Friday
+    }
 
     return (
       <div className="p-6">
-        <div className="grid grid-cols-7 gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-          {WEEKDAYS.map(day => (
+        <div className={cn("grid gap-px bg-neutral-200 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden", skipWeekends ? "grid-cols-5" : "grid-cols-7")}>
+          {displayDays.map(day => (
             <div key={day} className="bg-neutral-50 dark:bg-neutral-900 p-2 text-center text-sm font-semibold text-neutral-700 dark:text-neutral-300">
               {day}
             </div>
@@ -60,7 +67,7 @@ export function TimetablePreview({
             
             return (
               <div key={i} className={cn(
-                "min-h-[100px] bg-white dark:bg-neutral-900 p-2 flex flex-col gap-1",
+                "min-h-[120px] bg-white dark:bg-neutral-900 p-2 flex flex-col gap-1",
                 isOutOfRange && "bg-neutral-50/50 dark:bg-neutral-950/50 text-neutral-400",
                 scheduleDay?.isWeekend && "bg-neutral-50 dark:bg-neutral-800/50",
                 scheduleDay?.isHoliday && "bg-red-50/30 dark:bg-red-950/20"
@@ -80,7 +87,7 @@ export function TimetablePreview({
                 
                 {scheduleDay?.module && (
                   <div 
-                    className="mt-1 text-xs p-1.5 rounded-md font-medium truncate border flex flex-col gap-0.5"
+                    className="mt-1 text-xs p-1.5 rounded-md font-medium border flex flex-col gap-0.5"
                     style={{ 
                       backgroundColor: `${scheduleDay.module.color}15`,
                       borderColor: `${scheduleDay.module.color}30`,
@@ -88,15 +95,15 @@ export function TimetablePreview({
                     }}
                     title={scheduleDay.module.name}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: scheduleDay.module.color }} />
-                      <span className="truncate">{scheduleDay.module.name}</span>
+                    <div className="flex items-start gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: scheduleDay.module.color }} />
+                      <span className="leading-tight">{scheduleDay.module.name}</span>
                     </div>
                     {scheduleDay.module.instructor && (
-                      <span className="text-[10px] text-neutral-600 dark:text-neutral-400 truncate ml-3">{scheduleDay.module.instructor}</span>
+                      <span className="text-[10px] text-neutral-600 dark:text-neutral-400 ml-3 leading-tight">{scheduleDay.module.instructor}</span>
                     )}
                     {scheduleDay.isExamDay && (
-                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 ml-3 uppercase">Exam Day</span>
+                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 ml-3 mt-0.5 uppercase">Exam Day</span>
                     )}
                   </div>
                 )}
