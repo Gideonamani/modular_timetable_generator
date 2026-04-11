@@ -1,5 +1,5 @@
 import * as React from "react";
-import { addDays } from "date-fns";
+import { addDays, format } from "date-fns";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 
@@ -157,34 +157,93 @@ export default function App() {
     
     const originalBg = element.style.backgroundColor;
     const originalPadding = element.style.padding;
+    const originalOverflow = element.style.overflow;
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
+    element.style.overflow = 'visible';
     element.classList.add('export-mode');
     
     try {
-      const width = element.scrollWidth;
-      const height = element.scrollHeight;
+      const srcWidth = element.scrollWidth;
+      const srcHeight = element.scrollHeight;
       const dataUrl = await toPng(element, { 
         pixelRatio: 2,
-        width, height,
+        width: srcWidth,
+        height: srcHeight,
         style: { transform: 'scale(1)', transformOrigin: 'top left' }
       });
       
-      const pdfWidth = 595.28;
-      const pdfHeight = (height * pdfWidth) / width;
+      // A4 dimensions in points
+      const A4_WIDTH = 595.28;
+      const A4_HEIGHT = 841.89;
+      const MARGIN = 28; // ~10mm margin
+      
+      const printableWidth = A4_WIDTH - MARGIN * 2;
+      const printableHeight = A4_HEIGHT - MARGIN * 2;
+      
+      // Scale the content to fit A4 width
+      const scale = printableWidth / srcWidth;
+      const scaledHeight = srcHeight * scale;
+      
+      // How many pages we need
+      const totalPages = Math.ceil(scaledHeight / printableHeight);
+      
       const pdf = new jsPDF({
-        orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+        orientation: 'portrait',
         unit: 'pt',
-        format: [pdfWidth, pdfHeight]
+        format: 'a4'
       });
       
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Load image to get actual pixel dimensions
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+      });
+      
+      const imgPixelWidth = img.naturalWidth;
+      const imgPixelHeight = img.naturalHeight;
+      
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage();
+        
+        // Source crop coordinates (in image pixels)
+        const srcY = (page * printableHeight / scale) * (imgPixelHeight / srcHeight);
+        const srcCropHeight = (printableHeight / scale) * (imgPixelHeight / srcHeight);
+        
+        // Use a canvas to crop just this page's slice
+        const canvas = document.createElement('canvas');
+        canvas.width = imgPixelWidth;
+        canvas.height = Math.min(Math.ceil(srcCropHeight), imgPixelHeight - Math.floor(srcY));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
+        
+        ctx.drawImage(
+          img,
+          0, Math.floor(srcY),                              // source x, y
+          imgPixelWidth, canvas.height,                      // source w, h
+          0, 0,                                               // dest x, y
+          imgPixelWidth, canvas.height                        // dest w, h
+        );
+        
+        const pageDataUrl = canvas.toDataURL('image/png');
+        const sliceScaledHeight = (canvas.height / imgPixelHeight) * scaledHeight;
+        
+        pdf.addImage(
+          pageDataUrl, 'PNG',
+          MARGIN, MARGIN,
+          printableWidth,
+          Math.min(sliceScaledHeight, printableHeight)
+        );
+      }
+      
       pdf.save(`${timetableTitle.replace(/\s+/g, '_') || 'timetable'}.pdf`);
     } catch (err: any) {
       console.error('Failed to export PDF', err);
     } finally {
       element.style.backgroundColor = originalBg;
       element.style.padding = originalPadding;
+      element.style.overflow = originalOverflow;
       element.classList.remove('export-mode');
     }
   };

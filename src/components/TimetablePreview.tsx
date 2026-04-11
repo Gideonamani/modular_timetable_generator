@@ -164,8 +164,8 @@ export function TimetablePreview({
         </div>
       </div>
 
-      <Card className="border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden bg-white dark:bg-neutral-900 transition-colors">
-        <div className="overflow-x-auto">
+      <Card className="border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 transition-colors overflow-visible">
+        <div className="overflow-x-auto overflow-y-visible">
           <div id="timetable-container" className="min-w-[600px] bg-white dark:bg-neutral-900 transition-colors">
             <div className="p-6 border-b border-neutral-100 dark:border-neutral-800">
               <input
