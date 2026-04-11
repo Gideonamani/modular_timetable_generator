@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Module, DaySchedule, ViewMode } from "@/types";
-import { WEEKDAYS } from "@/lib/constants";
+import { Module, DaySchedule, ViewMode } from "../types";
+import { WEEKDAYS } from "../lib/constants";
 
 interface TimetablePreviewProps {
   schedule: DaySchedule[];
