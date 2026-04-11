@@ -8,6 +8,7 @@ import { COLORS, DEFAULT_MODULES } from "./lib/constants";
 import { generateSchedule } from "./lib/schedule-logic";
 import { ModuleSidebar } from "./components/ModuleSidebar";
 import { TimetablePreview } from "./components/TimetablePreview";
+import { fetchModulesFromSheet } from "./lib/google-sheets";
 
 export default function App() {
   const [startDate, setStartDate] = React.useState<Date>(new Date());
@@ -19,6 +20,11 @@ export default function App() {
   const [timetableSubtitle, setTimetableSubtitle] = React.useState('');
   const [modules, setModules] = React.useState<Module[]>(DEFAULT_MODULES);
   const [isDarkMode, setIsDarkMode] = React.useState(false);
+  
+  // Google Sheets integration state
+  const [sheetUrl, setSheetUrl] = React.useState('');
+  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [syncError, setSyncError] = React.useState('');
 
   // Theme effect
   React.useEffect(() => {
@@ -44,6 +50,7 @@ export default function App() {
         if (data.timetableSubtitle !== undefined) setTimetableSubtitle(data.timetableSubtitle);
         if (data.modules) setModules(data.modules);
         if (data.isDarkMode !== undefined) setIsDarkMode(data.isDarkMode);
+        if (data.sheetUrl) setSheetUrl(data.sheetUrl);
       } catch (err) {
         console.error('Failed to load saved data', err);
       }
@@ -61,15 +68,41 @@ export default function App() {
       timetableTitle,
       timetableSubtitle,
       modules,
-      isDarkMode
+      isDarkMode,
+      sheetUrl
     };
     localStorage.setItem('timetable_data', JSON.stringify(data));
-  }, [startDate, endDate, skipWeekends, holidays, viewMode, timetableTitle, timetableSubtitle, modules, isDarkMode]);
+  }, [startDate, endDate, skipWeekends, holidays, viewMode, timetableTitle, timetableSubtitle, modules, isDarkMode, sheetUrl]);
 
   const [newModuleName, setNewModuleName] = React.useState('');
   const [newModuleDays, setNewModuleDays] = React.useState<number | ''>(1);
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
+
+  const syncWithGoogleSheet = async () => {
+    if (!sheetUrl.trim()) {
+      setSyncError('Please enter a Google Sheet URL');
+      return;
+    }
+    
+    setIsSyncing(true);
+    setSyncError('');
+    
+    try {
+      const fetchedModules = await fetchModulesFromSheet(sheetUrl);
+      if (fetchedModules.length > 0) {
+        setModules(fetchedModules);
+        alert(`Successfully synced ${fetchedModules.length} modules!`);
+      } else {
+        setSyncError('No modules found in the provided sheet.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setSyncError(err.message || 'Failed to sync with Google Sheet');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const updateModule = (id: string, updates: Partial<Module>) => {
     setModules(modules.map(m => m.id === id ? { ...m, ...updates } : m));
@@ -459,6 +492,9 @@ export default function App() {
             editingModuleId={editingModuleId} setEditingModuleId={setEditingModuleId}
             exportToJSON={exportToJSON}
             importFromJSON={importFromJSON}
+            isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}
+            sheetUrl={sheetUrl} setSheetUrl={setSheetUrl}
+            isSyncing={isSyncing} syncError={syncError} syncWithGoogleSheet={syncWithGoogleSheet}
           />
         </div>
 

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,11 @@ interface ModuleSidebarProps {
   importFromJSON: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
+  sheetUrl: string;
+  setSheetUrl: (url: string) => void;
+  isSyncing: boolean;
+  syncError: string;
+  syncWithGoogleSheet: () => void;
 }
 
 export function ModuleSidebar({
@@ -55,7 +61,9 @@ export function ModuleSidebar({
   newModuleInstructor, setNewModuleInstructor,
   editingModuleId, setEditingModuleId,
   exportToJSON, importFromJSON,
-  isDarkMode, setIsDarkMode
+  isDarkMode, setIsDarkMode,
+  sheetUrl, setSheetUrl,
+  isSyncing, syncError, syncWithGoogleSheet
 }: ModuleSidebarProps) {
   return (
     <div className="space-y-6">
@@ -199,6 +207,104 @@ export function ModuleSidebar({
               checked={skipWeekends} 
               onCheckedChange={setSkipWeekends} 
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-neutral-200 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Google Sheets Backend</CardTitle>
+          <CardDescription>
+            Sync modules directly from a published Google Sheet. Use columns: Name, Days, Instructor.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sheet-url">Google Sheet URL</Label>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="link" className="h-auto p-0 text-xs text-blue-500 font-normal">How to connect?</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Google Sheets Backend Guide</DialogTitle>
+                    <DialogDescription>
+                      Follow these steps to sync modules directly from a Google Sheet.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">1. Create a Spreadsheet</h4>
+                      <p className="text-sm text-neutral-500">Create a Google Sheet with the following columns (headers must match approximately):</p>
+                      <ul className="text-sm list-disc pl-5 text-neutral-500 space-y-1">
+                        <li><strong>Name</strong> (Required): Module/topic name.</li>
+                        <li><strong>Days</strong> (Required): Number of days it takes.</li>
+                        <li><strong>Instructor</strong> (Optional): Name of the instructor.</li>
+                        <li><strong>Color</strong> (Optional): Hex code (e.g., #ff7f50) or color name.</li>
+                      </ul>
+                      <div className="border rounded-md overflow-hidden bg-neutral-50 dark:bg-neutral-900 text-xs text-neutral-600 dark:text-neutral-400 mt-2">
+                        <table className="w-full text-left">
+                          <thead className="bg-neutral-100 dark:bg-neutral-800 border-b">
+                            <tr>
+                              <th className="p-2 font-medium">Name</th>
+                              <th className="p-2 font-medium">Days</th>
+                              <th className="p-2 font-medium">Instructor</th>
+                              <th className="p-2 font-medium">Color</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            <tr>
+                              <td className="p-2">Intro to React</td>
+                              <td className="p-2">4</td>
+                              <td className="p-2">John Doe</td>
+                              <td className="p-2">#eb4034</td>
+                            </tr>
+                            <tr>
+                              <td className="p-2">Advanced State</td>
+                              <td className="p-2">2</td>
+                              <td className="p-2">Jane Smith</td>
+                              <td className="p-2">#4287f5</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">2. Make It Public</h4>
+                      <p className="text-sm text-neutral-500">
+                        The app needs read-only access. Click <strong>Share</strong> in the top right, change General Access to <strong>"Anyone with the link"</strong>, and copy the link.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">3. Sync</h4>
+                      <p className="text-sm text-neutral-500">
+                        Paste the copied URL here and click Sync. If you're on a specific tab, ensure the URL ends with <code>gid=...</code>.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                id="sheet-url"
+                placeholder="https://docs.google.com/spreadsheets/d/..."
+                value={sheetUrl}
+                onChange={(e) => setSheetUrl(e.target.value)}
+                autoComplete="off"
+              />
+              <Button 
+                onClick={syncWithGoogleSheet} 
+                disabled={isSyncing || !sheetUrl.trim()}
+                className="shrink-0"
+              >
+                {isSyncing ? "Syncing..." : "Sync"}
+              </Button>
+            </div>
+            {syncError && (
+              <p className="text-sm text-red-500 mt-1">{syncError}</p>
+            )}
           </div>
         </CardContent>
       </Card>
