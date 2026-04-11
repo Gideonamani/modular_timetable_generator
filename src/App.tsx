@@ -90,6 +90,18 @@ export default function App() {
     setNewModuleInstructor('');
   };
 
+  const moveModule = (id: string, direction: 'up' | 'down') => {
+    const index = modules.findIndex(m => m.id === id);
+    if (index === -1) return;
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === modules.length - 1) return;
+
+    const newModules = [...modules];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    [newModules[index], newModules[targetIndex]] = [newModules[targetIndex], newModules[index]];
+    setModules(newModules);
+  };
+
   const removeModule = (id: string) => {
     setModules(modules.filter(m => m.id !== id));
   };
@@ -200,6 +212,93 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  const exportToICS = () => {
+    if (schedule.length === 0) return;
+    
+    let icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Modular Timetable Generator//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH'
+    ];
+    
+    schedule.forEach((day, index) => {
+      if (day.module) {
+        // Simple full-day event
+        const dtStart = format(day.date, 'yyyyMMdd');
+        const dtEnd = format(addDays(day.date, 1), 'yyyyMMdd');
+        const timestamp = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
+        
+        icsContent.push('BEGIN:VEVENT');
+        icsContent.push(`UID:${dtStart}-${index}@timetable-generator.local`);
+        icsContent.push(`DTSTAMP:${timestamp}`);
+        icsContent.push(`DTSTART;VALUE=DATE:${dtStart}`);
+        icsContent.push(`DTEND;VALUE=DATE:${dtEnd}`);
+        icsContent.push(`SUMMARY:${day.module.name}`);
+        if (day.module.instructor) {
+          icsContent.push(`DESCRIPTION:Instructor: ${day.module.instructor}`);
+        }
+        if (day.isExamDay) {
+          icsContent.push('CATEGORIES:EXAM');
+          icsContent.push('PRIORITY:1');
+        }
+        icsContent.push('END:VEVENT');
+      }
+    });
+    
+    icsContent.push('END:VCALENDAR');
+    
+    const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${timetableTitle.replace(/\s+/g, '_') || 'timetable'}.ics`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToJSON = () => {
+    const data = {
+      modules,
+      timetableTitle,
+      timetableSubtitle
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${timetableTitle.replace(/\s+/g, '_') || 'timetable'}_template.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const importFromJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        if (data.modules && Array.isArray(data.modules)) {
+          setModules(data.modules.map((m: any) => ({ ...m, id: crypto.randomUUID() })));
+          if (data.timetableTitle) setTimetableTitle(data.timetableTitle);
+          if (data.timetableSubtitle) setTimetableSubtitle(data.timetableSubtitle);
+        }
+      } catch (err) {
+        console.error('Failed to parse template file', err);
+        alert('Invalid template file format.');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset input
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 font-sans text-foreground transition-colors duration-300">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -213,12 +312,15 @@ export default function App() {
             addModule={addModule}
             removeModule={removeModule}
             updateModule={updateModule}
+            moveModule={moveModule}
             duplicateModule={duplicateModule}
             clearAllModules={clearAllModules}
             newModuleName={newModuleName} setNewModuleName={setNewModuleName}
             newModuleDays={newModuleDays} setNewModuleDays={setNewModuleDays}
             newModuleInstructor={newModuleInstructor} setNewModuleInstructor={setNewModuleInstructor}
             editingModuleId={editingModuleId} setEditingModuleId={setEditingModuleId}
+            exportToJSON={exportToJSON}
+            importFromJSON={importFromJSON}
           />
         </div>
 
@@ -233,6 +335,7 @@ export default function App() {
             exportToPNG={exportToPNG}
             exportToPDF={exportToPDF}
             exportToCSV={exportToCSV}
+            exportToICS={exportToICS}
             isDarkMode={isDarkMode}
           />
         </div>

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, isSameDay } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Trash2, Pencil, Copy, RotateCcw, Moon, Sun } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Trash2, Pencil, Copy, RotateCcw, Moon, Sun, ArrowUp, ArrowDown, FileUp, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ interface ModuleSidebarProps {
   addModule: () => void;
   removeModule: (id: string) => void;
   updateModule: (id: string, updates: Partial<Module>) => void;
+  moveModule: (id: string, direction: 'up' | 'down') => void;
   duplicateModule: (id: string) => void;
   clearAllModules: () => void;
   newModuleName: string;
@@ -36,6 +37,8 @@ interface ModuleSidebarProps {
   setNewModuleInstructor: (instructor: string) => void;
   editingModuleId: string | null;
   setEditingModuleId: (id: string | null) => void;
+  exportToJSON: () => void;
+  importFromJSON: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
 }
@@ -46,11 +49,12 @@ export function ModuleSidebar({
   holidays, setHolidays,
   skipWeekends, setSkipWeekends,
   modules,
-  addModule, removeModule, updateModule, duplicateModule, clearAllModules,
+  addModule, removeModule, updateModule, moveModule, duplicateModule, clearAllModules,
   newModuleName, setNewModuleName,
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
   editingModuleId, setEditingModuleId,
+  exportToJSON, importFromJSON,
   isDarkMode, setIsDarkMode
 }: ModuleSidebarProps) {
   return (
@@ -60,14 +64,31 @@ export function ModuleSidebar({
           <h1 className="text-3xl font-bold tracking-tight text-neutral-950 dark:text-neutral-50">Timetable Generator</h1>
           <p className="text-neutral-500 dark:text-neutral-400 mt-1">Plan your modules and export your schedule.</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="rounded-full"
-        >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <label className="cursor-pointer">
+            <input type="file" className="hidden" accept=".json" onChange={importFromJSON} />
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" title="Import Template (JSON)">
+              <FileUp className="h-4 w-4" />
+            </Button>
+          </label>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={exportToJSON}
+            className="rounded-full h-8 w-8"
+            title="Save Template (JSON)"
+          >
+            <FileDown className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="rounded-full h-8 w-8 ml-1"
+          >
+            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
       <Card className="border-neutral-200 shadow-sm">
@@ -309,6 +330,26 @@ export function ModuleSidebar({
                             </div>
                           </div>
                           <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex flex-col mr-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
+                                onClick={() => moveModule(module.id, 'up')}
+                                title="Move Up"
+                              >
+                                <ArrowUp className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
+                                onClick={() => moveModule(module.id, 'down')}
+                                title="Move Down"
+                              >
+                                <ArrowDown className="h-3 w-3" />
+                              </Button>
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="icon" 

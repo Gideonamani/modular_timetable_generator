@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { FileImage, FileText, LayoutList, LayoutGrid, FileSpreadsheet } from "lucide-react";
+import { FileImage, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,6 +22,7 @@ interface TimetablePreviewProps {
   exportToPNG: () => void;
   exportToPDF: () => void;
   exportToCSV: () => void;
+  exportToICS: () => void;
   isDarkMode: boolean;
 }
 
@@ -31,7 +32,7 @@ export function TimetablePreview({
   timetableSubtitle, setTimetableSubtitle,
   startDate, endDate,
   modules,
-  exportToPNG, exportToPDF, exportToCSV,
+  exportToPNG, exportToPDF, exportToCSV, exportToICS,
   isDarkMode
 }: TimetablePreviewProps) {
   
@@ -151,6 +152,10 @@ export function TimetablePreview({
           <Button variant="outline" onClick={exportToCSV} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             CSV
+          </Button>
+          <Button variant="outline" onClick={exportToICS} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+            <Calendar className="mr-2 h-4 w-4" />
+            iCal
           </Button>
           <Button onClick={exportToPDF} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900">
             <FileText className="mr-2 h-4 w-4" />
