@@ -3,7 +3,6 @@ import { format, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval } from "da
 import { FileImage, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Module, DaySchedule, ViewMode } from "../types";
 import { WEEKDAYS } from "../lib/constants";
@@ -164,8 +163,8 @@ export function TimetablePreview({
         </div>
       </div>
 
-      <Card className="border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 transition-colors overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">
+      <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 transition-colors ring-1 ring-foreground/10">
+        <div className="overflow-x-auto">
           <div id="timetable-container" className="min-w-[600px] bg-white dark:bg-neutral-900 transition-colors">
             <div className="p-6 border-b border-neutral-100 dark:border-neutral-800">
               <input
@@ -274,7 +273,7 @@ export function TimetablePreview({
             )}
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

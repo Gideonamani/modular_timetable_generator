@@ -166,6 +166,37 @@ export default function App() {
     try {
       const srcWidth = element.scrollWidth;
       const srcHeight = element.scrollHeight;
+      
+      // --- Collect row boundaries from the DOM ---
+      const containerRect = element.getBoundingClientRect();
+      const breakPoints: number[] = [0]; // start of content
+      
+      // Get all table rows
+      const tableRows = element.querySelectorAll('tr');
+      tableRows.forEach(row => {
+        const rect = row.getBoundingClientRect();
+        const rowBottom = rect.bottom - containerRect.top;
+        breakPoints.push(rowBottom);
+      });
+      
+      // Also treat the legend section as a block
+      const legendEl = element.querySelector('[class*="border-t"]');
+      if (legendEl) {
+        const legendRect = legendEl.getBoundingClientRect();
+        const legendTop = legendRect.top - containerRect.top;
+        // Add legend top as a break point if not already present
+        if (!breakPoints.includes(legendTop)) {
+          breakPoints.push(legendTop);
+        }
+      }
+      
+      // End of content
+      breakPoints.push(srcHeight);
+      
+      // Deduplicate and sort
+      const uniqueBreaks = [...new Set(breakPoints)].sort((a, b) => a - b);
+      
+      // --- Render to image ---
       const dataUrl = await toPng(element, { 
         pixelRatio: 2,
         width: srcWidth,
@@ -176,25 +207,52 @@ export default function App() {
       // A4 dimensions in points
       const A4_WIDTH = 595.28;
       const A4_HEIGHT = 841.89;
-      const MARGIN = 28; // ~10mm margin
+      const MARGIN = 28;
+      const FOOTER_HEIGHT = 20; // space for page numbers
       
       const printableWidth = A4_WIDTH - MARGIN * 2;
-      const printableHeight = A4_HEIGHT - MARGIN * 2;
+      const printableHeight = A4_HEIGHT - MARGIN * 2 - FOOTER_HEIGHT;
       
-      // Scale the content to fit A4 width
+      // Scale factor: how the source pixels map to PDF points
       const scale = printableWidth / srcWidth;
-      const scaledHeight = srcHeight * scale;
       
-      // How many pages we need
-      const totalPages = Math.ceil(scaledHeight / printableHeight);
+      // --- Determine page breaks using row boundaries ---
+      const pages: Array<{ srcTop: number; srcBottom: number }> = [];
+      let currentPageTop = 0;
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'a4'
-      });
+      for (let i = 1; i < uniqueBreaks.length; i++) {
+        const breakY = uniqueBreaks[i];
+        const pageContentHeight = (breakY - currentPageTop) * scale;
+        
+        if (pageContentHeight > printableHeight) {
+          // This row would overflow: find the last break that fits
+          let bestBreak = currentPageTop;
+          for (let j = i - 1; j >= 0; j--) {
+            if ((uniqueBreaks[j] - currentPageTop) * scale <= printableHeight && uniqueBreaks[j] > currentPageTop) {
+              bestBreak = uniqueBreaks[j];
+              break;
+            }
+          }
+          
+          // If no good break found (single row taller than page), force it
+          if (bestBreak === currentPageTop) {
+            bestBreak = breakY;
+          }
+          
+          pages.push({ srcTop: currentPageTop, srcBottom: bestBreak });
+          currentPageTop = bestBreak;
+          i--; // Re-check this break point for the new page
+        }
+      }
       
-      // Load image to get actual pixel dimensions
+      // Add the final page
+      if (currentPageTop < srcHeight) {
+        pages.push({ srcTop: currentPageTop, srcBottom: srcHeight });
+      }
+      
+      const totalPages = pages.length;
+      
+      // --- Load image ---
       const img = new Image();
       img.src = dataUrl;
       await new Promise<void>((resolve) => {
@@ -203,38 +261,55 @@ export default function App() {
       
       const imgPixelWidth = img.naturalWidth;
       const imgPixelHeight = img.naturalHeight;
+      // Pixel ratio: image pixels per source pixel
+      const pxRatio = imgPixelHeight / srcHeight;
       
-      for (let page = 0; page < totalPages; page++) {
-        if (page > 0) pdf.addPage();
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4'
+      });
+      
+      for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+        if (pageIdx > 0) pdf.addPage();
         
-        // Source crop coordinates (in image pixels)
-        const srcY = (page * printableHeight / scale) * (imgPixelHeight / srcHeight);
-        const srcCropHeight = (printableHeight / scale) * (imgPixelHeight / srcHeight);
+        const { srcTop, srcBottom } = pages[pageIdx];
+        const sliceSrcHeight = srcBottom - srcTop;
         
-        // Use a canvas to crop just this page's slice
+        // Crop from the full image
+        const cropY = Math.floor(srcTop * pxRatio);
+        const cropH = Math.min(Math.ceil(sliceSrcHeight * pxRatio), imgPixelHeight - cropY);
+        
         const canvas = document.createElement('canvas');
         canvas.width = imgPixelWidth;
-        canvas.height = Math.min(Math.ceil(srcCropHeight), imgPixelHeight - Math.floor(srcY));
+        canvas.height = cropH;
         const ctx = canvas.getContext('2d');
         if (!ctx) continue;
         
         ctx.drawImage(
           img,
-          0, Math.floor(srcY),                              // source x, y
-          imgPixelWidth, canvas.height,                      // source w, h
-          0, 0,                                               // dest x, y
-          imgPixelWidth, canvas.height                        // dest w, h
+          0, cropY,
+          imgPixelWidth, cropH,
+          0, 0,
+          imgPixelWidth, cropH
         );
         
         const pageDataUrl = canvas.toDataURL('image/png');
-        const sliceScaledHeight = (canvas.height / imgPixelHeight) * scaledHeight;
+        const slicePdfHeight = sliceSrcHeight * scale;
         
         pdf.addImage(
           pageDataUrl, 'PNG',
           MARGIN, MARGIN,
           printableWidth,
-          Math.min(sliceScaledHeight, printableHeight)
+          Math.min(slicePdfHeight, printableHeight)
         );
+        
+        // --- Page number footer ---
+        pdf.setFontSize(9);
+        pdf.setTextColor(150, 150, 150);
+        const footerText = `Page ${pageIdx + 1} of ${totalPages}`;
+        const textWidth = pdf.getTextWidth(footerText);
+        pdf.text(footerText, (A4_WIDTH - textWidth) / 2, A4_HEIGHT - MARGIN + 4);
       }
       
       pdf.save(`${timetableTitle.replace(/\s+/g, '_') || 'timetable'}.pdf`);
