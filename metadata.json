@@ -1,0 +1,5 @@
+{
+  "name": "Modular Timetable Generator",
+  "description": "Create modular timetables with start and end dates, and export them as PDF or PNG.",
+  "requestFramePermissions": []
+}
