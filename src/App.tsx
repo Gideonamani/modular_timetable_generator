@@ -128,6 +128,7 @@ export default function App() {
     
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
+    element.classList.add('export-mode');
     
     try {
       const width = element.scrollWidth;
@@ -146,6 +147,7 @@ export default function App() {
     } finally {
       element.style.backgroundColor = '';
       element.style.padding = '';
+      element.classList.remove('export-mode');
     }
   };
 
@@ -157,6 +159,7 @@ export default function App() {
     const originalPadding = element.style.padding;
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
+    element.classList.add('export-mode');
     
     try {
       const width = element.scrollWidth;
@@ -182,6 +185,7 @@ export default function App() {
     } finally {
       element.style.backgroundColor = originalBg;
       element.style.padding = originalPadding;
+      element.classList.remove('export-mode');
     }
   };
 

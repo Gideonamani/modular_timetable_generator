@@ -128,3 +128,14 @@
     @apply font-sans;
     }
 }
+
+/* Hide scrollbars during export */
+.export-mode, .export-mode * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.export-mode::-webkit-scrollbar, .export-mode *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
