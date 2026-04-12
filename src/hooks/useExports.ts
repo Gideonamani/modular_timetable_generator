@@ -23,6 +23,8 @@ export function useExports({
   setTimetableTitle,
   setTimetableSubtitle,
 }: ExportOptions) {
+  const [isExporting, setIsExporting] = React.useState(false);
+
   const getFilename = (ext: string) =>
     `${timetableTitle.replace(/\s+/g, '_') || 'timetable'}.${ext}`;
 
@@ -41,6 +43,7 @@ export function useExports({
   const exportToPNG = async () => {
     const element = document.getElementById('timetable-container');
     if (!element) return;
+    setIsExporting(true);
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
     element.classList.add('export-mode');
@@ -61,12 +64,14 @@ export function useExports({
       element.style.backgroundColor = '';
       element.style.padding = '';
       element.classList.remove('export-mode');
+      setIsExporting(false);
     }
   };
 
   const exportToPDF = async () => {
     const element = document.getElementById('timetable-container');
     if (!element) return;
+    setIsExporting(true);
     const originalBg = element.style.backgroundColor;
     const originalPadding = element.style.padding;
     const originalOverflow = element.style.overflow;
@@ -168,6 +173,7 @@ export function useExports({
       element.style.padding = originalPadding;
       element.style.overflow = originalOverflow;
       element.classList.remove('export-mode');
+      setIsExporting(false);
     }
   };
 
@@ -237,5 +243,5 @@ export function useExports({
     event.target.value = '';
   };
 
-  return { exportToPNG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON };
+  return { isExporting, exportToPNG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON };
 }

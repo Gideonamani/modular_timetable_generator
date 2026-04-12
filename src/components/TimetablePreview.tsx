@@ -18,6 +18,7 @@ interface TimetablePreviewProps {
   startDate: Date;
   endDate: Date;
   modules: Module[];
+  isExporting: boolean;
   exportToPNG: () => void;
   exportToPDF: () => void;
   exportToCSV: () => void;
@@ -32,6 +33,7 @@ export function TimetablePreview({
   timetableSubtitle, setTimetableSubtitle,
   startDate, endDate,
   modules,
+  isExporting,
   exportToPNG, exportToPDF, exportToCSV, exportToICS,
   isDarkMode, skipWeekends
 }: TimetablePreviewProps) {
@@ -151,21 +153,21 @@ export function TimetablePreview({
               Grid
             </Button>
           </div>
-          <Button variant="outline" onClick={exportToPNG} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button variant="outline" onClick={exportToPNG} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
             <FileImage className="mr-2 h-4 w-4" />
-            PNG
+            {isExporting ? '...' : 'PNG'}
           </Button>
-          <Button variant="outline" onClick={exportToCSV} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button variant="outline" onClick={exportToCSV} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             CSV
           </Button>
-          <Button variant="outline" onClick={exportToICS} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button variant="outline" onClick={exportToICS} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
             <Calendar className="mr-2 h-4 w-4" />
             iCal
           </Button>
-          <Button onClick={exportToPDF} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900">
+          <Button onClick={exportToPDF} disabled={isExporting} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900">
             <FileText className="mr-2 h-4 w-4" />
-            PDF
+            {isExporting ? 'Exporting...' : 'PDF'}
           </Button>
         </div>
       </div>

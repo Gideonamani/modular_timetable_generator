@@ -119,6 +119,7 @@ export default function App() {
             startDate={startDate} endDate={endDate}
             skipWeekends={skipWeekends}
             modules={moduleState.modules}
+            isExporting={exports.isExporting}
             exportToPNG={exports.exportToPNG}
             exportToPDF={exports.exportToPDF}
             exportToCSV={exports.exportToCSV}
