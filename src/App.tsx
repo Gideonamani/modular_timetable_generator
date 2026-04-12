@@ -93,6 +93,7 @@ export default function App() {
             removeModule={moduleState.removeModule}
             updateModule={moduleState.updateModule}
             moveModule={moduleState.moveModule}
+            reorderModules={moduleState.reorderModules}
             duplicateModule={moduleState.duplicateModule}
             clearAllModules={moduleState.clearAllModules}
             newModuleName={moduleState.newModuleName} setNewModuleName={moduleState.setNewModuleName}

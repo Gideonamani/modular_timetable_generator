@@ -71,6 +71,18 @@ export function useModules(initialModules: Module[]) {
     }
   };
 
+  const reorderModules = (activeId: string, overId: string) => {
+    setModules(prev => {
+      const oldIndex = prev.findIndex(m => m.id === activeId);
+      const newIndex = prev.findIndex(m => m.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(oldIndex, 1);
+      next.splice(newIndex, 0, moved);
+      return next;
+    });
+  };
+
   return {
     modules, setModules,
     newModuleName, setNewModuleName,
@@ -79,6 +91,6 @@ export function useModules(initialModules: Module[]) {
     newModuleColor, setNewModuleColor,
     editingModuleId, setEditingModuleId,
     formError,
-    addModule, updateModule, removeModule, moveModule, duplicateModule, clearAllModules,
+    addModule, updateModule, removeModule, moveModule, reorderModules, duplicateModule, clearAllModules,
   };
 }

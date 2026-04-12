@@ -1,6 +1,20 @@
 import * as React from "react";
 import { format, isSameDay } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Trash2, Pencil, Copy, RotateCcw, Moon, Sun, ArrowUp, ArrowDown, FileUp, FileDown } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Trash2, Pencil, Copy, RotateCcw, Moon, Sun, GripVertical, FileUp, FileDown } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +42,7 @@ interface ModuleSidebarProps {
   removeModule: (id: string) => void;
   updateModule: (id: string, updates: Partial<Module>) => void;
   moveModule: (id: string, direction: 'up' | 'down') => void;
+  reorderModules: (activeId: string, overId: string) => void;
   duplicateModule: (id: string) => void;
   clearAllModules: () => void;
   newModuleName: string;
@@ -52,13 +67,102 @@ interface ModuleSidebarProps {
   syncWithGoogleSheet: () => void;
 }
 
+interface SortableModuleRowProps {
+  module: Module;
+  isEditing: boolean;
+  onEdit: () => void;
+  onDoneEdit: () => void;
+  onUpdate: (updates: Partial<Module>) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+}
+
+function SortableModuleRow({ module, isEditing, onEdit, onDoneEdit, onUpdate, onDuplicate, onRemove }: SortableModuleRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: module.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+      animate={{ opacity: isDragging ? 0.5 : 1, height: 'auto', marginBottom: 8 }}
+      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+      transition={{ duration: 0.2 }}
+      className="overflow-hidden"
+    >
+      {isEditing ? (
+        <div className="flex flex-col gap-2 p-3 rounded-md border bg-neutral-50 dark:bg-neutral-900 shadow-sm w-full">
+          <div className="space-y-1">
+            <Label className="text-xs">Module Name</Label>
+            <Input value={module.name} onChange={(e) => onUpdate({ name: e.target.value })} placeholder="Module Name" className="h-8 text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Instructor</Label>
+            <Input value={module.instructor || ''} onChange={(e) => onUpdate({ instructor: e.target.value })} placeholder="Instructor Name" className="h-8 text-sm" />
+          </div>
+          <div className="flex gap-2">
+            <div className="space-y-1 flex-1">
+              <Label className="text-xs">Days</Label>
+              <Input type="number" min="1" value={module.days} onChange={(e) => onUpdate({ days: parseInt(e.target.value) || 1 })} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Color</Label>
+              <input type="color" value={module.color} onChange={(e) => onUpdate({ color: e.target.value })}
+                className="h-8 w-10 rounded cursor-pointer border border-neutral-200 dark:border-neutral-700 p-0.5 bg-white dark:bg-neutral-800" title="Pick a color" />
+            </div>
+          </div>
+          <div className="flex justify-end mt-1">
+            <Button size="sm" className="h-7 px-3 text-xs" onClick={onDoneEdit}>Done</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between p-2 rounded-md border bg-white dark:bg-neutral-800 shadow-sm group">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <button
+              className="cursor-grab active:cursor-grabbing text-neutral-300 hover:text-neutral-500 shrink-0 touch-none"
+              title="Drag to reorder"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: module.color }} />
+            <div className="truncate">
+              <p className="text-sm font-medium truncate dark:text-neutral-200">{module.name}</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {module.days} day{module.days !== 1 ? 's' : ''}{module.instructor ? ` • ${module.instructor}` : ''}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-blue-500 shrink-0" onClick={onDuplicate} title="Duplicate">
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-blue-500 shrink-0" onClick={onEdit} title="Edit">
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-red-500 shrink-0" onClick={onRemove} title="Delete">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export function ModuleSidebar({
   startDate, setStartDate,
   endDate, setEndDate,
   holidays, setHolidays,
   skipWeekends, setSkipWeekends,
   modules,
-  addModule, removeModule, updateModule, moveModule, duplicateModule, clearAllModules,
+  addModule, removeModule, updateModule, moveModule, reorderModules, duplicateModule, clearAllModules,
   newModuleName, setNewModuleName,
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
@@ -407,133 +511,33 @@ export function ModuleSidebar({
               {modules.length === 0 ? (
                 <p className="text-sm text-neutral-500 text-center py-4 border border-dashed rounded-md">No modules added yet.</p>
               ) : (
-                <AnimatePresence initial={false}>
-                  {modules.map((module) => (
-                    <motion.div
-                      key={module.id}
-                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
-                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      {editingModuleId === module.id ? (
-                        <div className="flex flex-col gap-2 p-3 rounded-md border bg-neutral-50 dark:bg-neutral-900 shadow-sm w-full">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Module Name</Label>
-                            <Input
-                              value={module.name}
-                              onChange={(e) => updateModule(module.id, { name: e.target.value })}
-                              placeholder="Module Name"
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Instructor</Label>
-                            <Input
-                              value={module.instructor || ''}
-                              onChange={(e) => updateModule(module.id, { instructor: e.target.value })}
-                              placeholder="Instructor Name"
-                              className="h-8 text-sm"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <div className="space-y-1 flex-1">
-                              <Label className="text-xs">Days</Label>
-                              <Input
-                                type="number"
-                                min="1"
-                                value={module.days}
-                                onChange={(e) => updateModule(module.id, { days: parseInt(e.target.value) || 1 })}
-                                className="h-8 text-sm"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">Color</Label>
-                              <input
-                                type="color"
-                                value={module.color}
-                                onChange={(e) => updateModule(module.id, { color: e.target.value })}
-                                className="h-8 w-10 rounded cursor-pointer border border-neutral-200 dark:border-neutral-700 p-0.5 bg-white dark:bg-neutral-800"
-                                title="Pick a color"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex justify-end mt-1">
-                            <Button size="sm" className="h-7 px-3 text-xs" onClick={() => setEditingModuleId(null)}>Done</Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div 
-                          className="flex items-center justify-between p-2 rounded-md border bg-white dark:bg-neutral-800 shadow-sm group"
-                        >
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <div 
-                              className="w-3 h-3 rounded-full shrink-0" 
-                              style={{ backgroundColor: module.color }}
-                            />
-                            <div className="truncate">
-                              <p className="text-sm font-medium truncate dark:text-neutral-200">{module.name}</p>
-                              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                                {module.days} day{module.days !== 1 ? 's' : ''}
-                                {module.instructor ? ` • ${module.instructor}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex flex-col mr-1">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
-                                onClick={() => moveModule(module.id, 'up')}
-                                title="Move Up"
-                              >
-                                <ArrowUp className="h-3 w-3" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
-                                onClick={() => moveModule(module.id, 'down')}
-                                title="Move Down"
-                              >
-                                <ArrowDown className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
-                              onClick={() => duplicateModule(module.id)}
-                              title="Duplicate"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-neutral-400 hover:text-blue-500 shrink-0"
-                              onClick={() => setEditingModuleId(module.id)}
-                              title="Edit"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-neutral-400 hover:text-red-500 shrink-0"
-                              onClick={() => removeModule(module.id)}
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                <DndContext
+                  sensors={useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))}
+                  collisionDetection={closestCenter}
+                  onDragEnd={(event: DragEndEvent) => {
+                    const { active, over } = event;
+                    if (over && active.id !== over.id) {
+                      reorderModules(String(active.id), String(over.id));
+                    }
+                  }}
+                >
+                  <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                    <AnimatePresence initial={false}>
+                      {modules.map((module) => (
+                        <SortableModuleRow
+                          key={module.id}
+                          module={module}
+                          isEditing={editingModuleId === module.id}
+                          onEdit={() => setEditingModuleId(module.id)}
+                          onDoneEdit={() => setEditingModuleId(null)}
+                          onUpdate={(updates) => updateModule(module.id, updates)}
+                          onDuplicate={() => duplicateModule(module.id)}
+                          onRemove={() => removeModule(module.id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </ScrollArea>
