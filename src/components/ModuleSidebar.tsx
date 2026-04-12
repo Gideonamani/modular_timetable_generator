@@ -36,6 +36,8 @@ interface ModuleSidebarProps {
   setNewModuleDays: (days: number | "") => void;
   newModuleInstructor: string;
   setNewModuleInstructor: (instructor: string) => void;
+  newModuleColor: string;
+  setNewModuleColor: (color: string) => void;
   editingModuleId: string | null;
   setEditingModuleId: (id: string | null) => void;
   exportToJSON: () => void;
@@ -59,6 +61,7 @@ export function ModuleSidebar({
   newModuleName, setNewModuleName,
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
+  newModuleColor, setNewModuleColor,
   editingModuleId, setEditingModuleId,
   exportToJSON, importFromJSON,
   isDarkMode, setIsDarkMode,
@@ -357,15 +360,39 @@ export function ModuleSidebar({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="module-instructor">Instructor (Optional)</Label>
-              <Input 
-                id="module-instructor" 
-                placeholder="e.g. John Doe" 
-                value={newModuleInstructor}
-                onChange={(e) => setNewModuleInstructor(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addModule()}
-              />
+            <div className="flex gap-2">
+              <div className="space-y-2 flex-1">
+                <Label htmlFor="module-instructor">Instructor (Optional)</Label>
+                <Input
+                  id="module-instructor"
+                  placeholder="e.g. John Doe"
+                  value={newModuleInstructor}
+                  onChange={(e) => setNewModuleInstructor(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addModule()}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="module-color">Color</Label>
+                <div className="flex items-center gap-1.5 h-9">
+                  <input
+                    id="module-color"
+                    type="color"
+                    value={newModuleColor || '#818cf8'}
+                    onChange={(e) => setNewModuleColor(e.target.value)}
+                    className="h-8 w-8 rounded cursor-pointer border border-neutral-200 dark:border-neutral-700 p-0.5 bg-white dark:bg-neutral-800"
+                    title="Pick a color"
+                  />
+                  {newModuleColor && (
+                    <button
+                      onClick={() => setNewModuleColor('')}
+                      className="text-xs text-neutral-400 hover:text-neutral-600"
+                      title="Reset to auto"
+                    >
+                      Auto
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -404,15 +431,27 @@ export function ModuleSidebar({
                               className="h-8 text-sm"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">Days</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={module.days}
-                              onChange={(e) => updateModule(module.id, { days: parseInt(e.target.value) || 1 })}
-                              className="h-8 text-sm"
-                            />
+                          <div className="flex gap-2">
+                            <div className="space-y-1 flex-1">
+                              <Label className="text-xs">Days</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={module.days}
+                                onChange={(e) => updateModule(module.id, { days: parseInt(e.target.value) || 1 })}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Color</Label>
+                              <input
+                                type="color"
+                                value={module.color}
+                                onChange={(e) => updateModule(module.id, { color: e.target.value })}
+                                className="h-8 w-10 rounded cursor-pointer border border-neutral-200 dark:border-neutral-700 p-0.5 bg-white dark:bg-neutral-800"
+                                title="Pick a color"
+                              />
+                            </div>
                           </div>
                           <div className="flex justify-end mt-1">
                             <Button size="sm" className="h-7 px-3 text-xs" onClick={() => setEditingModuleId(null)}>Done</Button>

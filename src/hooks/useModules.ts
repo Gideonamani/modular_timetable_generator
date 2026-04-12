@@ -7,11 +7,12 @@ export function useModules(initialModules: Module[]) {
   const [newModuleName, setNewModuleName] = React.useState('');
   const [newModuleDays, setNewModuleDays] = React.useState<number | ''>(1);
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
+  const [newModuleColor, setNewModuleColor] = React.useState('');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
 
   const addModule = () => {
     if (!newModuleName.trim() || !newModuleDays || newModuleDays <= 0) return;
-    const color = COLORS[modules.length % COLORS.length];
+    const color = newModuleColor || COLORS[modules.length % COLORS.length];
     setModules(prev => [...prev, {
       id: crypto.randomUUID(),
       name: newModuleName.trim(),
@@ -22,6 +23,7 @@ export function useModules(initialModules: Module[]) {
     setNewModuleName('');
     setNewModuleDays(1);
     setNewModuleInstructor('');
+    setNewModuleColor('');
   };
 
   const updateModule = (id: string, updates: Partial<Module>) => {
@@ -64,6 +66,7 @@ export function useModules(initialModules: Module[]) {
     newModuleName, setNewModuleName,
     newModuleDays, setNewModuleDays,
     newModuleInstructor, setNewModuleInstructor,
+    newModuleColor, setNewModuleColor,
     editingModuleId, setEditingModuleId,
     addModule, updateModule, removeModule, moveModule, duplicateModule, clearAllModules,
   };
