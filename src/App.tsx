@@ -96,6 +96,7 @@ export default function App() {
             newModuleDays={moduleState.newModuleDays} setNewModuleDays={moduleState.setNewModuleDays}
             newModuleInstructor={moduleState.newModuleInstructor} setNewModuleInstructor={moduleState.setNewModuleInstructor}
             newModuleColor={moduleState.newModuleColor} setNewModuleColor={moduleState.setNewModuleColor}
+            formError={moduleState.formError}
             editingModuleId={moduleState.editingModuleId} setEditingModuleId={moduleState.setEditingModuleId}
             exportToJSON={exports.exportToJSON}
             importFromJSON={exports.importFromJSON}

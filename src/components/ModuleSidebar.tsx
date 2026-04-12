@@ -38,6 +38,7 @@ interface ModuleSidebarProps {
   setNewModuleInstructor: (instructor: string) => void;
   newModuleColor: string;
   setNewModuleColor: (color: string) => void;
+  formError: string;
   editingModuleId: string | null;
   setEditingModuleId: (id: string | null) => void;
   exportToJSON: () => void;
@@ -62,6 +63,7 @@ export function ModuleSidebar({
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
   newModuleColor, setNewModuleColor,
+  formError,
   editingModuleId, setEditingModuleId,
   exportToJSON, importFromJSON,
   isDarkMode, setIsDarkMode,
@@ -395,6 +397,10 @@ export function ModuleSidebar({
               </div>
             </div>
           </div>
+
+          {formError && (
+            <p className="text-sm text-red-500 -mt-1">{formError}</p>
+          )}
 
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-2 mt-4">

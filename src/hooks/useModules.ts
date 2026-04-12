@@ -9,9 +9,18 @@ export function useModules(initialModules: Module[]) {
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
   const [newModuleColor, setNewModuleColor] = React.useState('');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
+  const [formError, setFormError] = React.useState('');
 
   const addModule = () => {
-    if (!newModuleName.trim() || !newModuleDays || newModuleDays <= 0) return;
+    if (!newModuleName.trim()) {
+      setFormError('Module name is required.');
+      return;
+    }
+    if (!newModuleDays || newModuleDays <= 0 || !Number.isInteger(Number(newModuleDays))) {
+      setFormError('Days must be a positive whole number.');
+      return;
+    }
+    setFormError('');
     const color = newModuleColor || COLORS[modules.length % COLORS.length];
     setModules(prev => [...prev, {
       id: crypto.randomUUID(),
@@ -24,6 +33,7 @@ export function useModules(initialModules: Module[]) {
     setNewModuleDays(1);
     setNewModuleInstructor('');
     setNewModuleColor('');
+    setFormError('');
   };
 
   const updateModule = (id: string, updates: Partial<Module>) => {
@@ -68,6 +78,7 @@ export function useModules(initialModules: Module[]) {
     newModuleInstructor, setNewModuleInstructor,
     newModuleColor, setNewModuleColor,
     editingModuleId, setEditingModuleId,
+    formError,
     addModule, updateModule, removeModule, moveModule, duplicateModule, clearAllModules,
   };
 }
