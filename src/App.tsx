@@ -10,6 +10,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useModules } from "./hooks/useModules";
 import { useGoogleSheets } from "./hooks/useGoogleSheets";
 import { useExports } from "./hooks/useExports";
+import { useDebouncedEffect } from "./hooks/useDebouncedEffect";
 
 function loadSavedData() {
   try {
@@ -66,8 +67,8 @@ export default function App() {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
-  // Persist to localStorage
-  React.useEffect(() => {
+  // Persist to localStorage (debounced to avoid writing on every keystroke)
+  useDebouncedEffect(() => {
     localStorage.setItem('timetable_data', JSON.stringify({
       startDate, endDate, skipWeekends, holidays,
       viewMode, timetableTitle, timetableSubtitle,
@@ -75,7 +76,7 @@ export default function App() {
       sheetUrl: sheetsState.sheetUrl,
     }));
   }, [startDate, endDate, skipWeekends, holidays, viewMode, timetableTitle,
-      timetableSubtitle, moduleState.modules, isDarkMode, sheetsState.sheetUrl]);
+      timetableSubtitle, moduleState.modules, isDarkMode, sheetsState.sheetUrl], 500);
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 font-sans text-foreground transition-colors duration-300">
