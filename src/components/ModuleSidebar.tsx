@@ -45,6 +45,8 @@ interface ModuleSidebarProps {
   reorderModules: (activeId: string, overId: string) => void;
   duplicateModule: (id: string) => void;
   clearAllModules: () => void;
+  canUndo: boolean;
+  undoLastDelete: () => void;
   newModuleName: string;
   setNewModuleName: (name: string) => void;
   newModuleDays: number | "";
@@ -162,7 +164,7 @@ export function ModuleSidebar({
   holidays, setHolidays,
   skipWeekends, setSkipWeekends,
   modules,
-  addModule, removeModule, updateModule, moveModule, reorderModules, duplicateModule, clearAllModules,
+  addModule, removeModule, updateModule, moveModule, reorderModules, duplicateModule, clearAllModules, canUndo, undoLastDelete,
   newModuleName, setNewModuleName,
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
@@ -425,17 +427,30 @@ export function ModuleSidebar({
               <CardTitle className="text-lg">Modules</CardTitle>
               <CardDescription>Add the blocks of work to schedule.</CardDescription>
             </div>
-            {modules.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 text-neutral-500 hover:text-red-500 hover:bg-red-50"
-                onClick={clearAllModules}
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                Clear
-              </Button>
-            )}
+            <div className="flex gap-1">
+              {canUndo && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-neutral-500 hover:text-blue-500 hover:bg-blue-50"
+                  onClick={undoLastDelete}
+                  title="Undo last delete"
+                >
+                  Undo
+                </Button>
+              )}
+              {modules.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-neutral-500 hover:text-red-500 hover:bg-red-50"
+                  onClick={clearAllModules}
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

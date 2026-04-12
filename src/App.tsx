@@ -96,6 +96,8 @@ export default function App() {
             reorderModules={moduleState.reorderModules}
             duplicateModule={moduleState.duplicateModule}
             clearAllModules={moduleState.clearAllModules}
+            canUndo={moduleState.canUndo}
+            undoLastDelete={moduleState.undoLastDelete}
             newModuleName={moduleState.newModuleName} setNewModuleName={moduleState.setNewModuleName}
             newModuleDays={moduleState.newModuleDays} setNewModuleDays={moduleState.setNewModuleDays}
             newModuleInstructor={moduleState.newModuleInstructor} setNewModuleInstructor={moduleState.setNewModuleInstructor}

@@ -10,6 +10,7 @@ export function useModules(initialModules: Module[]) {
   const [newModuleColor, setNewModuleColor] = React.useState('');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
   const [formError, setFormError] = React.useState('');
+  const [undoSnapshot, setUndoSnapshot] = React.useState<Module[] | null>(null);
 
   const addModule = () => {
     if (!newModuleName.trim()) {
@@ -41,7 +42,10 @@ export function useModules(initialModules: Module[]) {
   };
 
   const removeModule = (id: string) => {
-    setModules(prev => prev.filter(m => m.id !== id));
+    setModules(prev => {
+      setUndoSnapshot(prev);
+      return prev.filter(m => m.id !== id);
+    });
   };
 
   const duplicateModule = (id: string) => {
@@ -67,7 +71,15 @@ export function useModules(initialModules: Module[]) {
 
   const clearAllModules = () => {
     if (confirm('Are you sure you want to clear all modules?')) {
+      setUndoSnapshot(modules);
       setModules([]);
+    }
+  };
+
+  const undoLastDelete = () => {
+    if (undoSnapshot !== null) {
+      setModules(undoSnapshot);
+      setUndoSnapshot(null);
     }
   };
 
@@ -91,6 +103,7 @@ export function useModules(initialModules: Module[]) {
     newModuleColor, setNewModuleColor,
     editingModuleId, setEditingModuleId,
     formError,
-    addModule, updateModule, removeModule, moveModule, reorderModules, duplicateModule, clearAllModules,
+    canUndo: undoSnapshot !== null,
+    addModule, updateModule, removeModule, moveModule, reorderModules, duplicateModule, clearAllModules, undoLastDelete,
   };
 }
