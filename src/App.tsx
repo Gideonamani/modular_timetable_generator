@@ -6,6 +6,7 @@ import { DEFAULT_MODULES } from "./lib/constants";
 import { generateSchedule } from "./lib/schedule-logic";
 import { ModuleSidebar } from "./components/ModuleSidebar";
 import { TimetablePreview } from "./components/TimetablePreview";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useModules } from "./hooks/useModules";
 import { useGoogleSheets } from "./hooks/useGoogleSheets";
 import { useExports } from "./hooks/useExports";
@@ -80,6 +81,7 @@ export default function App() {
     <div className="min-h-screen bg-background p-4 md:p-8 font-sans text-foreground transition-colors duration-300">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-4">
+          <ErrorBoundary>
           <ModuleSidebar
             startDate={startDate} setStartDate={setStartDate}
             endDate={endDate} setEndDate={setEndDate}
@@ -105,8 +107,10 @@ export default function App() {
             isSyncing={sheetsState.isSyncing} syncError={sheetsState.syncError}
             syncWithGoogleSheet={sheetsState.syncWithGoogleSheet}
           />
+          </ErrorBoundary>
         </div>
         <div className="lg:col-span-8">
+          <ErrorBoundary>
           <TimetablePreview
             schedule={schedule}
             viewMode={viewMode} setViewMode={setViewMode}
@@ -121,6 +125,7 @@ export default function App() {
             exportToICS={exports.exportToICS}
             isDarkMode={isDarkMode}
           />
+          </ErrorBoundary>
         </div>
       </div>
     </div>
