@@ -17,8 +17,8 @@ This document outlines the planned trajectory for the project. For a historical 
 ## Known Bugs
 
 ### 🔴 Critical
-- [ ] **Conditional hook call in `ModuleSidebar`** — `useSensors`/`useSensor` are called inline as a JSX prop inside a `modules.length > 0` ternary, violating the Rules of Hooks. Hook call count changes at runtime, which can cause unpredictable state bugs or crashes in Strict Mode. Fix: hoist the `useSensors(...)` call to the top of the component.
-- [ ] **`setState` side-effect inside updater in `useModules`** — `removeModule` calls `setUndoSnapshot(prev)` inside the `setModules` updater function. Updaters must be pure; in Strict Mode they are intentionally invoked twice, so the snapshot would capture the already-filtered list instead of the original. Fix: call `setUndoSnapshot` separately before `setModules`.
+- [x] **Conditional hook call in `ModuleSidebar`** — hoisted `useSensors(...)` to the top of the component; was previously called inline inside a `modules.length > 0` ternary.
+- [x] **`setState` side-effect inside updater in `useModules`** — separated `setUndoSnapshot(modules)` into its own call before `setModules`; was previously a side-effect inside the updater function.
 
 ### 🟡 Medium
 - [ ] **PDF list-view rows still being cut at page boundaries** — despite multiple rounds of fixes, some rows continue to be clipped mid-content on page breaks. The break-point collection logic (`getBoundingClientRect` relative to the container) needs a dedicated investigation and a proper test harness. Suggested approach: write unit/integration tests for the pagination logic in isolation (mock DOM measurements), then verify against real exports before closing this out.
