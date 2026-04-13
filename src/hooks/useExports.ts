@@ -3,6 +3,7 @@ import { format, addDays } from "date-fns";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { Module, DaySchedule } from "../types";
+import { computePages } from "../lib/pdf-pagination";
 
 interface ExportOptions {
   schedule: DaySchedule[];
@@ -163,17 +164,6 @@ export function useExports({
 
       breakPoints.push(srcHeight);
 
-      const uniqueBreaks = [...new Set(breakPoints.map(Math.round))]
-        .filter(b => b >= 0 && b <= srcHeight)
-        .sort((a, b) => a - b);
-
-      // 1.5× is sufficient for print quality and reduces canvas area to ~56% of 2×.
-      // 2× is only needed for Retina screen rendering, not for PDF output.
-      const dataUrl = await toPng(element, {
-        pixelRatio: 1.5, width: srcWidth, height: srcHeight,
-        style: { transform: 'scale(1)', transformOrigin: 'top left' },
-      });
-
       const A4_WIDTH = 595.28;
       const A4_HEIGHT = 841.89;
       const MARGIN = 28;
@@ -182,31 +172,14 @@ export function useExports({
       const printableHeight = A4_HEIGHT - MARGIN * 2 - FOOTER_HEIGHT;
       const scale = printableWidth / srcWidth;
 
-      const pages: Array<{ srcTop: number; srcBottom: number }> = [];
-      let currentPageTop = 0;
+      const pages = computePages(breakPoints, srcHeight, scale, printableHeight);
 
-      for (let i = 1; i < uniqueBreaks.length; i++) {
-        const pageContentHeight = (uniqueBreaks[i] - currentPageTop) * scale;
-        if (pageContentHeight > printableHeight) {
-          // Walk backwards to find the last break point that fits
-          let bestBreak = currentPageTop;
-          for (let j = i - 1; j >= 0; j--) {
-            if (
-              uniqueBreaks[j] > currentPageTop &&
-              (uniqueBreaks[j] - currentPageTop) * scale <= printableHeight
-            ) {
-              bestBreak = uniqueBreaks[j];
-              break;
-            }
-          }
-          // If nothing fits (single row taller than a page), force-cut at this break
-          if (bestBreak === currentPageTop) bestBreak = uniqueBreaks[i];
-          pages.push({ srcTop: currentPageTop, srcBottom: bestBreak });
-          currentPageTop = bestBreak;
-          i--;
-        }
-      }
-      if (currentPageTop < srcHeight) pages.push({ srcTop: currentPageTop, srcBottom: srcHeight });
+      // 1.5× is sufficient for print quality and reduces canvas area to ~56% of 2×.
+      // 2× is only needed for Retina screen rendering, not for PDF output.
+      const dataUrl = await toPng(element, {
+        pixelRatio: 1.5, width: srcWidth, height: srcHeight,
+        style: { transform: 'scale(1)', transformOrigin: 'top left' },
+      });
 
       const img = new Image();
       img.src = dataUrl;

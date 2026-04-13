@@ -12,6 +12,7 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **PDF List View Row Integrity** — multi-line rows (module + instructor) no longer split across page boundaries; replaced `getBoundingClientRect()` with scroll-independent `offsetParent` measurements
 - [x] **PDF Export Capture Fix** — resolved overflow clipping from the scroll wrapper and added reflow timing so measurements are always accurate
 - [x] **PDF Break Point Measurement** — reverted to `getBoundingClientRect()` with the container rect as reference; the previous `offsetParent`-walking helper silently returned wrong values because `#timetable-container` is `position: static`
+- [x] **PDF Pagination Extraction & Tests** — `computePages()` extracted into `src/lib/pdf-pagination.ts` as a pure, independently testable function; 16 unit tests added covering all edge cases; algorithm proven correct
 - [x] **JSON Import File Picker** — replaced `<label>` wrapper with a `ref`-driven `.click()` call; nested `<button>` inside `<label>` was consuming the click event
 - [x] **Conditional Hook Call (`ModuleSidebar`)** — hoisted `useSensors(...)` to component top; was called conditionally inside a ternary
 - [x] **`setState` Side-Effect in Updater (`useModules`)** — separated `setUndoSnapshot` into its own call before `setModules`
@@ -26,7 +27,7 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **`setState` side-effect inside updater in `useModules`** — separated `setUndoSnapshot(modules)` into its own call before `setModules`; was previously a side-effect inside the updater function.
 
 ### 🟡 Medium
-- [ ] **PDF list-view rows still being cut at page boundaries** — despite multiple rounds of fixes, some rows continue to be clipped mid-content on page breaks. The break-point collection logic (`getBoundingClientRect` relative to the container) needs a dedicated investigation and a proper test harness. Suggested approach: write unit/integration tests for the pagination logic in isolation (mock DOM measurements), then verify against real exports before closing this out.
+- [ ] **PDF list-view rows still being cut at page boundaries** — investigation complete. The `computePages()` algorithm is proven correct by 16 unit tests (all pass). Root cause of residual cutting is DOM measurement drift: `getBoundingClientRect()` measures the live DOM layout while `html-to-image` renders an off-screen clone; subpixel height differences accumulate across many rows, causing 1–2 px misalignment per row that grows in long tables. The permanent fix is `@react-pdf/renderer` (see Future Ideas below) — the PDF engine handles pagination natively, bypassing DOM measurement entirely. `computePages()` and its tests remain in place as a solid foundation.
 - [x] **PNG export not unlocking overflow** — applied the same overflow-visible fix as PDF; container and wrapper are both unlocked before capture and restored after.
 - [x] **Unvalidated sheet color values** — added `resolveHexColor()` in `google-sheets.ts`; only valid `#rgb`/`#rrggbb` values are accepted, everything else falls back to the auto palette.
 

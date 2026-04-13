@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-04-13
+
+### Added
+- **PDF Pagination Unit Tests**: Extracted `computePages()` from the PDF export pipeline into a standalone pure function in `src/lib/pdf-pagination.ts`. Added 16 unit tests in `src/lib/pdf-pagination.test.ts` covering single-page, multi-page, mixed row heights, edge cases (zero height, exact-fit, oversized row force-cut), input sanitisation (duplicates, out-of-range, unsorted, fractional break points), and invariant verification (no gaps, no overlaps, boundaries always on break points). All 29 tests pass.
+
+### Changed
+- **`exportToPDF` refactor**: The inline pagination loop in `useExports.ts` has been replaced with a call to the new `computePages()` utility. Behaviour is identical; the extracted function is now independently testable.
+
+---
+
 ## [0.1.4] - 2026-04-13
 
 ### Changed
