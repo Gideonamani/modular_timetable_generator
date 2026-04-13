@@ -177,6 +177,7 @@ export function ModuleSidebar({
   isSyncing, syncError, syncWithGoogleSheet
 }: ModuleSidebarProps) {
   const importInputRef = React.useRef<HTMLInputElement>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   return (
     <div className="space-y-6">
@@ -539,7 +540,7 @@ export function ModuleSidebar({
                 <p className="text-sm text-neutral-500 text-center py-4 border border-dashed rounded-md">No modules added yet.</p>
               ) : (
                 <DndContext
-                  sensors={useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))}
+                  sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragEnd={(event: DragEndEvent) => {
                     const { active, over } = event;

@@ -42,10 +42,8 @@ export function useModules(initialModules: Module[]) {
   };
 
   const removeModule = (id: string) => {
-    setModules(prev => {
-      setUndoSnapshot(prev);
-      return prev.filter(m => m.id !== id);
-    });
+    setUndoSnapshot(modules);
+    setModules(prev => prev.filter(m => m.id !== id));
   };
 
   const duplicateModule = (id: string) => {
