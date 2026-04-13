@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .module { fill: #1a1a1a; }
+    @media (prefers-color-scheme: dark) {
+      .module { fill: #fcfcfc; }
+    }
+  </style>
+  <rect class="module" x="2" y="2" width="12" height="12" rx="3" />
+  <rect class="module" x="18" y="2" width="12" height="12" rx="3" opacity="0.8" />
+  <rect class="module" x="2" y="18" width="12" height="12" rx="3" opacity="0.9" />
+  <rect class="module" x="18" y="18" width="12" height="12" rx="3" opacity="0.7" />
+</svg>
