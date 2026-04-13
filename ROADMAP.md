@@ -14,6 +14,21 @@ This document outlines the planned trajectory for the project. For a historical 
 
 ---
 
+## Known Bugs
+
+### 🔴 Critical
+- [ ] **Conditional hook call in `ModuleSidebar`** — `useSensors`/`useSensor` are called inline as a JSX prop inside a `modules.length > 0` ternary, violating the Rules of Hooks. Hook call count changes at runtime, which can cause unpredictable state bugs or crashes in Strict Mode. Fix: hoist the `useSensors(...)` call to the top of the component.
+- [ ] **`setState` side-effect inside updater in `useModules`** — `removeModule` calls `setUndoSnapshot(prev)` inside the `setModules` updater function. Updaters must be pure; in Strict Mode they are intentionally invoked twice, so the snapshot would capture the already-filtered list instead of the original. Fix: call `setUndoSnapshot` separately before `setModules`.
+
+### 🟡 Medium
+- [ ] **PNG export not unlocking overflow** — `exportToPNG` in `useExports` doesn't set `overflow: visible` on the timetable container or its `.overflow-x-auto` parent, so long timetables and grid views can be silently clipped in PNG output. The same fix applied to PDF export should be applied here.
+- [ ] **Unvalidated sheet color values** — `google-sheets.ts` passes color values from the sheet directly without validation. CSS color names (e.g. `"coral"`) render fine but break `<input type="color">`, which requires a valid hex string. Fix: attempt to resolve named colors to hex, or fall back to the auto palette if the value isn't a valid hex code.
+
+### 🟢 Low
+- [ ] **Single-day modules always flagged as Exam Day** — `schedule-logic.ts` marks a day as exam day when `currentModuleDaysLeft === 1`, so any module with `days: 1` has its only day flagged. This is likely unintentional for short modules like workshops or orientations.
+
+---
+
 ## Future Ideas
 
 ### UX & Interface
