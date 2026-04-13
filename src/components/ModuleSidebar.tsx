@@ -176,6 +176,8 @@ export function ModuleSidebar({
   sheetUrl, setSheetUrl,
   isSyncing, syncError, syncWithGoogleSheet
 }: ModuleSidebarProps) {
+  const importInputRef = React.useRef<HTMLInputElement>(null);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -184,12 +186,22 @@ export function ModuleSidebar({
           <p className="text-neutral-500 dark:text-neutral-400 mt-1">Plan your modules and export your schedule.</p>
         </div>
         <div className="flex items-center gap-1">
-          <label className="cursor-pointer">
-            <input type="file" className="hidden" accept=".json" onChange={importFromJSON} />
-            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8" title="Import Template (JSON)">
-              <FileUp className="h-4 w-4" />
-            </Button>
-          </label>
+          <input
+            ref={importInputRef}
+            type="file"
+            className="hidden"
+            accept=".json"
+            onChange={importFromJSON}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-8 w-8"
+            title="Import Template (JSON)"
+            onClick={() => importInputRef.current?.click()}
+          >
+            <FileUp className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
