@@ -8,6 +8,9 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **Google Sheets Sync** — added ability to pull module data from external spreadsheets
 - [x] **Grid View Enhancements** — implemented 5-day layout logic and improved text rendering
 - [x] **PDF Export Optimization** — fixed row cropping and added intelligent pagination
+- [x] **PDF Grid View Pagination** — grid-view exports now paginate correctly by week-row instead of squishing all content onto one page
+- [x] **PDF List View Row Integrity** — multi-line rows (module + instructor) no longer split across page boundaries; replaced `getBoundingClientRect()` with scroll-independent `offsetParent` measurements
+- [x] **PDF Export Capture Fix** — resolved overflow clipping from the scroll wrapper and added reflow timing so measurements are always accurate
 
 ---
 

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-04-13
+
+### Fixed
+- **PDF Grid View Squish**: Grid-view exports were compressing all weeks onto a single page because the paginator only searched for `<tr>` break points, which don't exist in the CSS grid layout. The fix groups grid cells by `offsetTop` to find each week-row's bottom edge and uses those as page-break candidates.
+- **PDF List View Row Cutting**: Rows with multi-line content (module name + instructor) were being split mid-row across pages. The root cause was use of `getBoundingClientRect()`, whose viewport-relative coordinates drift for rows below the visible scroll area. Replaced with a `relativeOffsetTop()` helper that walks the `offsetParent` chain, giving scroll-independent offsets.
+- **PDF Capture Clipping**: The `.overflow-x-auto` wrapper surrounding the timetable container was left at its default overflow during export, allowing it to clip the `html-to-image` capture. The wrapper's overflow is now temporarily set to `visible` alongside the container and restored afterwards.
+- **PDF Layout Measurement Timing**: Break points were measured immediately after applying export styles, before the browser had time to reflow. Two `requestAnimationFrame` ticks are now awaited before any measurements are taken.
+
+---
+
 ## [0.1.0] - 2026-04-13
 
 ### Added

@@ -71,6 +71,11 @@ export function useExports({
   const exportToPDF = async () => {
     const element = document.getElementById('timetable-container');
     if (!element) return;
+
+    // Also unlock the overflow-x-auto wrapper so it never clips the capture
+    const scrollWrapper = element.closest<HTMLElement>('.overflow-x-auto');
+    const originalWrapperOverflow = scrollWrapper?.style.overflow ?? '';
+
     setIsExporting(true);
     const originalBg = element.style.backgroundColor;
     const originalPadding = element.style.padding;
@@ -78,25 +83,57 @@ export function useExports({
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
     element.style.overflow = 'visible';
+    if (scrollWrapper) scrollWrapper.style.overflow = 'visible';
     element.classList.add('export-mode');
+
+    // Wait two animation frames so the browser fully reflows after the style changes
+    await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
+
     try {
       const srcWidth = element.scrollWidth;
       const srcHeight = element.scrollHeight;
-      const containerRect = element.getBoundingClientRect();
       const breakPoints: number[] = [0];
 
-      element.querySelectorAll('tr').forEach(row => {
-        breakPoints.push(row.getBoundingClientRect().bottom - containerRect.top);
+      // Returns the offsetTop of `el` relative to `ancestor`, walking up offsetParent chain.
+      // This is scroll-independent, unlike getBoundingClientRect().
+      function relativeOffsetTop(el: HTMLElement, ancestor: HTMLElement): number {
+        let top = 0;
+        let cur: HTMLElement | null = el;
+        while (cur && cur !== ancestor) {
+          top += cur.offsetTop;
+          cur = cur.offsetParent as HTMLElement | null;
+        }
+        return top;
+      }
+
+      // List view — break after each <tr> row
+      element.querySelectorAll<HTMLElement>('tr').forEach(row => {
+        breakPoints.push(relativeOffsetTop(row, element) + row.offsetHeight);
       });
 
-      const legendEl = element.querySelector('[class*="border-t"]');
-      if (legendEl) {
-        const legendTop = legendEl.getBoundingClientRect().top - containerRect.top;
-        if (!breakPoints.includes(legendTop)) breakPoints.push(legendTop);
+      // Grid view — the calendar is a CSS grid of <div>s, not a <table>.
+      // Group cells by their offsetTop to find each week-row's bottom edge.
+      const gridContainer = element.querySelector<HTMLElement>('[class*="grid-cols"]');
+      if (gridContainer) {
+        const rowBottomByTop = new Map<number, number>();
+        Array.from(gridContainer.querySelectorAll<HTMLElement>(':scope > div')).forEach(cell => {
+          const cellTop = cell.offsetTop; // relative to the grid container
+          const cellBottom = relativeOffsetTop(cell, element) + cell.offsetHeight;
+          const prev = rowBottomByTop.get(cellTop) ?? 0;
+          rowBottomByTop.set(cellTop, Math.max(prev, cellBottom));
+        });
+        rowBottomByTop.forEach(bottom => breakPoints.push(bottom));
       }
+
+      // Legend section start — prefer not to split it across pages
+      const legendEl = element.querySelector<HTMLElement>('[class*="border-t"]');
+      if (legendEl) {
+        breakPoints.push(relativeOffsetTop(legendEl, element));
+      }
+
       breakPoints.push(srcHeight);
 
-      const uniqueBreaks = [...new Set(breakPoints)].sort((a, b) => a - b);
+      const uniqueBreaks = [...new Set(breakPoints.map(Math.round))].sort((a, b) => a - b);
 
       const dataUrl = await toPng(element, {
         pixelRatio: 2, width: srcWidth, height: srcHeight,
@@ -117,13 +154,18 @@ export function useExports({
       for (let i = 1; i < uniqueBreaks.length; i++) {
         const pageContentHeight = (uniqueBreaks[i] - currentPageTop) * scale;
         if (pageContentHeight > printableHeight) {
+          // Walk backwards to find the last break point that fits
           let bestBreak = currentPageTop;
           for (let j = i - 1; j >= 0; j--) {
-            if ((uniqueBreaks[j] - currentPageTop) * scale <= printableHeight && uniqueBreaks[j] > currentPageTop) {
+            if (
+              uniqueBreaks[j] > currentPageTop &&
+              (uniqueBreaks[j] - currentPageTop) * scale <= printableHeight
+            ) {
               bestBreak = uniqueBreaks[j];
               break;
             }
           }
+          // If nothing fits (single row taller than a page), force-cut at this break
           if (bestBreak === currentPageTop) bestBreak = uniqueBreaks[i];
           pages.push({ srcTop: currentPageTop, srcBottom: bestBreak });
           currentPageTop = bestBreak;
@@ -138,6 +180,7 @@ export function useExports({
 
       const imgPixelWidth = img.naturalWidth;
       const imgPixelHeight = img.naturalHeight;
+      // Physical pixel : CSS pixel ratio from the actual captured image
       const pxRatio = imgPixelHeight / srcHeight;
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
@@ -156,8 +199,9 @@ export function useExports({
         if (!ctx) continue;
         ctx.drawImage(img, 0, cropY, imgPixelWidth, cropH, 0, 0, imgPixelWidth, cropH);
 
+        // Place image at correct aspect ratio — no squishing
         const slicePdfHeight = sliceSrcHeight * scale;
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', MARGIN, MARGIN, printableWidth, Math.min(slicePdfHeight, printableHeight));
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', MARGIN, MARGIN, printableWidth, slicePdfHeight);
 
         pdf.setFontSize(9);
         pdf.setTextColor(150, 150, 150);
@@ -172,6 +216,7 @@ export function useExports({
       element.style.backgroundColor = originalBg;
       element.style.padding = originalPadding;
       element.style.overflow = originalOverflow;
+      if (scrollWrapper) scrollWrapper.style.overflow = originalWrapperOverflow;
       element.classList.remove('export-mode');
       setIsExporting(false);
     }
