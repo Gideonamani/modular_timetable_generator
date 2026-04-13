@@ -8,25 +8,45 @@ interface ExportOptions {
   schedule: DaySchedule[];
   timetableTitle: string;
   timetableSubtitle: string;
+  startDate: Date;
+  endDate: Date;
+  holidays: Date[];
+  skipWeekends: boolean;
   modules: Module[];
   setModules: (modules: Module[]) => void;
   setTimetableTitle: (title: string) => void;
   setTimetableSubtitle: (subtitle: string) => void;
+  setStartDate: (date: Date) => void;
+  setEndDate: (date: Date) => void;
+  setHolidays: (dates: Date[]) => void;
+  setSkipWeekends: (skip: boolean) => void;
 }
 
 export function useExports({
   schedule,
   timetableTitle,
   timetableSubtitle,
+  startDate,
+  endDate,
+  holidays,
+  skipWeekends,
   modules,
   setModules,
   setTimetableTitle,
   setTimetableSubtitle,
+  setStartDate,
+  setEndDate,
+  setHolidays,
+  setSkipWeekends,
 }: ExportOptions) {
   const [isExporting, setIsExporting] = React.useState(false);
 
-  const getFilename = (ext: string) =>
-    `${timetableTitle.replace(/\s+/g, '_') || 'timetable'}.${ext}`;
+  // Embed a timestamp so repeated exports never produce colliding filenames
+  const getFilename = (ext: string) => {
+    const title = timetableTitle.replace(/\s+/g, '_') || 'timetable';
+    const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+    return `${title}_${timestamp}.${ext}`;
+  };
 
   const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
@@ -43,10 +63,22 @@ export function useExports({
   const exportToPNG = async () => {
     const element = document.getElementById('timetable-container');
     if (!element) return;
+
+    const scrollWrapper = element.closest<HTMLElement>('.overflow-x-auto');
+    const originalWrapperOverflow = scrollWrapper?.style.overflow ?? '';
+
     setIsExporting(true);
+    const originalBg = element.style.backgroundColor;
+    const originalPadding = element.style.padding;
+    const originalOverflow = element.style.overflow;
     element.style.backgroundColor = '#ffffff';
     element.style.padding = '24px';
+    element.style.overflow = 'visible';
+    if (scrollWrapper) scrollWrapper.style.overflow = 'visible';
     element.classList.add('export-mode');
+
+    await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
+
     try {
       const width = element.scrollWidth;
       const height = element.scrollHeight;
@@ -61,8 +93,10 @@ export function useExports({
     } catch (err) {
       console.error('Failed to export PNG', err);
     } finally {
-      element.style.backgroundColor = '';
-      element.style.padding = '';
+      element.style.backgroundColor = originalBg;
+      element.style.padding = originalPadding;
+      element.style.overflow = originalOverflow;
+      if (scrollWrapper) scrollWrapper.style.overflow = originalWrapperOverflow;
       element.classList.remove('export-mode');
       setIsExporting(false);
     }
@@ -263,7 +297,15 @@ export function useExports({
   };
 
   const exportToJSON = () => {
-    const data = { modules, timetableTitle, timetableSubtitle };
+    const data = {
+      timetableTitle,
+      timetableSubtitle,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      skipWeekends,
+      holidays: holidays.map(h => h.toISOString()),
+      modules,
+    };
     const filename = getFilename('json').replace('.json', '_template.json');
     downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), filename);
   };
@@ -275,11 +317,18 @@ export function useExports({
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target?.result as string);
-        if (data.modules && Array.isArray(data.modules)) {
-          setModules(data.modules.map((m: any) => ({ ...m, id: crypto.randomUUID() })));
-          if (data.timetableTitle) setTimetableTitle(data.timetableTitle);
-          if (data.timetableSubtitle !== undefined) setTimetableSubtitle(data.timetableSubtitle);
+        if (!data.modules || !Array.isArray(data.modules)) {
+          alert('Invalid template file: missing modules array.');
+          return;
         }
+        setModules(data.modules.map((m: any) => ({ ...m, id: crypto.randomUUID() })));
+        if (data.timetableTitle)              setTimetableTitle(data.timetableTitle);
+        if (data.timetableSubtitle !== undefined) setTimetableSubtitle(data.timetableSubtitle);
+        if (data.startDate)    setStartDate(new Date(data.startDate));
+        if (data.endDate)      setEndDate(new Date(data.endDate));
+        if (typeof data.skipWeekends === 'boolean') setSkipWeekends(data.skipWeekends);
+        if (Array.isArray(data.holidays))
+          setHolidays(data.holidays.map((h: string) => new Date(h)));
       } catch {
         alert('Invalid template file format.');
       }

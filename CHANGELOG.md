@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-04-13
+
+### Added
+- **Richer JSON Export**: Exported templates now include `startDate`, `endDate`, `skipWeekends`, and `holidays` alongside modules and title. Importing a template fully restores the entire schedule state, not just the module list. Old templates that only carry modules remain fully compatible.
+- **Timestamped Export Filenames**: All exported files (PDF, PNG, CSV, ICS, JSON) now embed a `YYYY-MM-DD_HH-mm` timestamp in the filename (e.g. `Modular_Timetable_2026-04-13_14-30.pdf`). Repeated exports no longer produce `(1)`, `(2)` clutter.
+
+### Fixed
+- **PNG Export Overflow Clipping**: `exportToPNG` now unlocks `overflow: visible` on both the timetable container and its `.overflow-x-auto` parent before capture, matching the behaviour already in place for PDF. Long timetables and grid views are no longer silently clipped in PNG output.
+- **Google Sheets Color Validation**: Color values read from a sheet are now validated as `#rgb` or `#rrggbb` hex strings before use. Named CSS colors (e.g. `"coral"`) previously rendered in the grid but silently broke `<input type="color">` when editing that module. Invalid values now fall back to the auto-assigned palette color.
+
+---
+
 ## [0.1.2] - 2026-04-13
 
 ### Fixed

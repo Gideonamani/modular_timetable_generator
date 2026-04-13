@@ -56,10 +56,18 @@ export default function App() {
     schedule,
     timetableTitle,
     timetableSubtitle,
+    startDate,
+    endDate,
+    holidays,
+    skipWeekends,
     modules: moduleState.modules,
     setModules: moduleState.setModules,
     setTimetableTitle,
     setTimetableSubtitle,
+    setStartDate,
+    setEndDate,
+    setHolidays,
+    setSkipWeekends,
   });
 
   // Dark mode

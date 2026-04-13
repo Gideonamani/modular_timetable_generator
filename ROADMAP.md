@@ -27,8 +27,8 @@ This document outlines the planned trajectory for the project. For a historical 
 
 ### 🟡 Medium
 - [ ] **PDF list-view rows still being cut at page boundaries** — despite multiple rounds of fixes, some rows continue to be clipped mid-content on page breaks. The break-point collection logic (`getBoundingClientRect` relative to the container) needs a dedicated investigation and a proper test harness. Suggested approach: write unit/integration tests for the pagination logic in isolation (mock DOM measurements), then verify against real exports before closing this out.
-- [ ] **PNG export not unlocking overflow** — `exportToPNG` in `useExports` doesn't set `overflow: visible` on the timetable container or its `.overflow-x-auto` parent, so long timetables and grid views can be silently clipped in PNG output. The same fix applied to PDF export should be applied here.
-- [ ] **Unvalidated sheet color values** — `google-sheets.ts` passes color values from the sheet directly without validation. CSS color names (e.g. `"coral"`) render fine but break `<input type="color">`, which requires a valid hex string. Fix: attempt to resolve named colors to hex, or fall back to the auto palette if the value isn't a valid hex code.
+- [x] **PNG export not unlocking overflow** — applied the same overflow-visible fix as PDF; container and wrapper are both unlocked before capture and restored after.
+- [x] **Unvalidated sheet color values** — added `resolveHexColor()` in `google-sheets.ts`; only valid `#rgb`/`#rrggbb` values are accepted, everything else falls back to the auto palette.
 
 ### 🟢 Low
 - [ ] **Single-day modules always flagged as Exam Day** — `schedule-logic.ts` marks a day as exam day when `currentModuleDaysLeft === 1`, so any module with `days: 1` has its only day flagged. This is likely unintentional for short modules like workshops or orientations.
@@ -50,8 +50,8 @@ This document outlines the planned trajectory for the project. For a historical 
 - [ ] **Semester Templates** — save full semester configurations as reusable templates
 
 ### Exports & Sharing
-- [ ] **Richer JSON template** — the exported JSON currently only carries modules, title, and subtitle. It should also include start date, end date, holidays, and skip-weekends setting so a template fully restores a saved schedule state on import.
-- [ ] **Timestamped and versioned export filenames** — all exported files (PDF, PNG, CSV, ICS, JSON) currently use the bare timetable title, leading to `(1)`, `(2)` clutter from repeated exports. Filenames should embed a timestamp (e.g. `YYYY-MM-DD_HH-mm`) and optionally a short version slug so successive exports never collide and are easy to tell apart.
+- [x] **Richer JSON template** — exported JSON now includes `startDate`, `endDate`, `skipWeekends`, and `holidays`; import restores the full schedule state. Old module-only templates remain compatible.
+- [x] **Timestamped export filenames** — all exported files now embed a `YYYY-MM-DD_HH-mm` timestamp; no more `(1)`, `(2)` collisions.
 - [ ] **Export file size reduction** — generated PDFs and PNGs are disproportionately large for their page count. Potential approaches: lower the `pixelRatio` from 2× to 1.5× for PDF (2× is only needed for Retina screens, not for print), use JPEG instead of PNG for the image embedded in the PDF (significantly smaller for colour-heavy content), and run the final PNG through a compression step (e.g. `canvas.toBlob` with a quality parameter, or a WASM-based optimiser like `@jsquash/png`). Worth benchmarking each option against a representative timetable before committing to one.
 - [ ] **Shareable URL** — encode current schedule state into a URL for easy sharing
 - [ ] **Google Calendar Sync** — push the schedule directly to a Google Calendar

@@ -2,6 +2,18 @@ import Papa from 'papaparse';
 import { Module } from '../types';
 import { COLORS } from './constants';
 
+/**
+ * Returns the value unchanged if it is a valid CSS hex color (#rgb or #rrggbb),
+ * otherwise returns undefined so callers can fall back to the auto palette.
+ * CSS named colors (e.g. "coral") are intentionally rejected — <input type="color">
+ * requires a hex string and silently breaks with named values.
+ */
+function resolveHexColor(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed) ? trimmed : undefined;
+}
+
 export function extractGoogleSheetInfo(url: string) {
   const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   const gidMatch = url.match(/[#&]gid=([0-9]+)/);
@@ -55,7 +67,7 @@ export async function fetchModulesFromSheet(url: string): Promise<Module[]> {
             const instructor = getCol(['instructor', 'teacher', 'tutor']);
             const colorParam = getCol(['color', 'colour', 'bg']);
             
-            const color = colorParam || COLORS[index % COLORS.length];
+            const color = resolveHexColor(colorParam) ?? COLORS[index % COLORS.length];
 
             return {
               id: crypto.randomUUID(),
