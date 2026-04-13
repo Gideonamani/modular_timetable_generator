@@ -94,46 +94,44 @@ export function useExports({
       const srcHeight = element.scrollHeight;
       const breakPoints: number[] = [0];
 
-      // Returns the offsetTop of `el` relative to `ancestor`, walking up offsetParent chain.
-      // This is scroll-independent, unlike getBoundingClientRect().
-      function relativeOffsetTop(el: HTMLElement, ancestor: HTMLElement): number {
-        let top = 0;
-        let cur: HTMLElement | null = el;
-        while (cur && cur !== ancestor) {
-          top += cur.offsetTop;
-          cur = cur.offsetParent as HTMLElement | null;
-        }
-        return top;
-      }
+      // getBoundingClientRect() gives viewport-relative coordinates for every element.
+      // Taking (child.rect - container.rect) cancels the scroll offset, giving the correct
+      // position of any child relative to the container top — regardless of page scroll.
+      // This works even though #timetable-container is position:static (not an offsetParent),
+      // which made the previous offsetParent-walking approach return wrong values.
+      const containerRect = element.getBoundingClientRect();
 
-      // List view — break after each <tr> row
+      // List view — break after the bottom edge of each <tr>
       element.querySelectorAll<HTMLElement>('tr').forEach(row => {
-        breakPoints.push(relativeOffsetTop(row, element) + row.offsetHeight);
+        breakPoints.push(Math.round(row.getBoundingClientRect().bottom - containerRect.top));
       });
 
       // Grid view — the calendar is a CSS grid of <div>s, not a <table>.
-      // Group cells by their offsetTop to find each week-row's bottom edge.
+      // Group cells by their rounded top edge to identify each week-row, then
+      // take the maximum bottom edge of that group as the break point.
       const gridContainer = element.querySelector<HTMLElement>('[class*="grid-cols"]');
       if (gridContainer) {
         const rowBottomByTop = new Map<number, number>();
         Array.from(gridContainer.querySelectorAll<HTMLElement>(':scope > div')).forEach(cell => {
-          const cellTop = cell.offsetTop; // relative to the grid container
-          const cellBottom = relativeOffsetTop(cell, element) + cell.offsetHeight;
-          const prev = rowBottomByTop.get(cellTop) ?? 0;
-          rowBottomByTop.set(cellTop, Math.max(prev, cellBottom));
+          const rect = cell.getBoundingClientRect();
+          const relTop  = Math.round(rect.top  - containerRect.top);
+          const relBottom = Math.round(rect.bottom - containerRect.top);
+          rowBottomByTop.set(relTop, Math.max(rowBottomByTop.get(relTop) ?? 0, relBottom));
         });
         rowBottomByTop.forEach(bottom => breakPoints.push(bottom));
       }
 
-      // Legend section start — prefer not to split it across pages
+      // Legend section — prefer not to split it across pages
       const legendEl = element.querySelector<HTMLElement>('[class*="border-t"]');
       if (legendEl) {
-        breakPoints.push(relativeOffsetTop(legendEl, element));
+        breakPoints.push(Math.round(legendEl.getBoundingClientRect().top - containerRect.top));
       }
 
       breakPoints.push(srcHeight);
 
-      const uniqueBreaks = [...new Set(breakPoints.map(Math.round))].sort((a, b) => a - b);
+      const uniqueBreaks = [...new Set(breakPoints.map(Math.round))]
+        .filter(b => b >= 0 && b <= srcHeight)
+        .sort((a, b) => a - b);
 
       const dataUrl = await toPng(element, {
         pixelRatio: 2, width: srcWidth, height: srcHeight,
@@ -199,8 +197,10 @@ export function useExports({
         if (!ctx) continue;
         ctx.drawImage(img, 0, cropY, imgPixelWidth, cropH, 0, 0, imgPixelWidth, cropH);
 
-        // Place image at correct aspect ratio — no squishing
-        const slicePdfHeight = sliceSrcHeight * scale;
+        // Clamp to printableHeight as a safety net — correct break points mean this
+        // should never trigger in practice, but prevents content overflowing the page
+        // if a slice ends up fractionally over due to rounding.
+        const slicePdfHeight = Math.min(sliceSrcHeight * scale, printableHeight);
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', MARGIN, MARGIN, printableWidth, slicePdfHeight);
 
         pdf.setFontSize(9);
