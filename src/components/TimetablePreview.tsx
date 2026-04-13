@@ -132,42 +132,42 @@ export function TimetablePreview({
             {schedule.length} total days &bull; {schedule.filter(s => !s.isWeekend && !s.isHoliday).length} working days
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border dark:border-neutral-700 rounded-md p-1 bg-neutral-50 dark:bg-neutral-800 mr-2">
-            <Button 
-              variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
-              size="sm" 
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center border dark:border-neutral-700 rounded-md p-1 bg-neutral-50 dark:bg-neutral-800">
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size="sm"
               className="h-7 px-2"
               onClick={() => setViewMode('list')}
             >
-              <LayoutList className="h-4 w-4 mr-1.5" />
-              List
+              <LayoutList className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">List</span>
             </Button>
-            <Button 
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
-              size="sm" 
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="sm"
               className="h-7 px-2"
               onClick={() => setViewMode('grid')}
             >
-              <LayoutGrid className="h-4 w-4 mr-1.5" />
-              Grid
+              <LayoutGrid className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Grid</span>
             </Button>
           </div>
           <Button variant="outline" onClick={exportToPNG} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
-            <FileImage className="mr-2 h-4 w-4" />
-            {isExporting ? '...' : 'PNG'}
+            <FileImage className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isExporting ? '...' : 'PNG'}</span>
           </Button>
           <Button variant="outline" onClick={exportToCSV} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            CSV
+            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">CSV</span>
           </Button>
           <Button variant="outline" onClick={exportToICS} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
-            <Calendar className="mr-2 h-4 w-4" />
-            iCal
+            <Calendar className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">iCal</span>
           </Button>
           <Button onClick={exportToPDF} disabled={isExporting} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900">
-            <FileText className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exporting...' : 'PDF'}
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'PDF'}</span>
           </Button>
         </div>
       </div>
