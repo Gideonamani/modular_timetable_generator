@@ -68,10 +68,8 @@ export function useModules(initialModules: Module[]) {
   };
 
   const clearAllModules = () => {
-    if (confirm('Are you sure you want to clear all modules?')) {
-      setUndoSnapshot(modules);
-      setModules([]);
-    }
+    setUndoSnapshot(modules);
+    setModules([]);
   };
 
   const undoLastDelete = () => {

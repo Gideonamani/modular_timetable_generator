@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-04-13
+
+### Fixed
+- **Clear All Modules Button**: `clearAllModules` relied on `window.confirm()`, which is silently suppressed in cross-origin iframes, certain Chromium security contexts, and some deployed environments — causing the button to appear broken. Replaced with an inline double-click confirmation: first click arms the button ("Sure?"), second click within 2 seconds executes; the button auto-resets if the second click doesn't come.
+- **JSON Import File Picker**: Clicking the Import button never opened the file dialog because a `<Button>` (rendered as `<button>`) was nested inside a `<label>`. The `<button>` consumed the click event before the label could forward it to the hidden `<input type="file">`. Fixed by attaching a `ref` to the input and calling `.click()` directly from the button's `onClick` handler.
+- **PDF Break Point Measurement**: Break points were computed using a custom `relativeOffsetTop()` helper that walked the `offsetParent` chain looking for `#timetable-container` as the stop condition. Because the container is `position: static` it is never an `offsetParent`, so the loop climbed to `<body>` and returned each element's absolute page offset instead of its container-relative offset. Reverted to `getBoundingClientRect()` with the container rect as reference — viewport-relative coordinates cancel the scroll offset correctly in both approaches, but `getBoundingClientRect()` does not require the ancestor to be positioned.
+- **PDF Grid View Pagination**: Grid-view exports no longer squish all weeks onto one page. Break points are now collected from CSS grid cells grouped by `getBoundingClientRect().top`, identifying each week-row's bottom edge correctly.
+- **Conditional Hook Call in `ModuleSidebar`**: `useSensors`/`useSensor` were called inline as a JSX prop value inside a `modules.length > 0` ternary, violating the Rules of Hooks (hook call count changed at runtime). Hoisted to the top of the component.
+- **`setState` Side-Effect in `useModules` Updater**: `removeModule` called `setUndoSnapshot(prev)` inside the `setModules` updater function. React calls updaters twice in Strict Mode (dev), so the snapshot was capturing the already-filtered list, breaking undo. Moved `setUndoSnapshot(modules)` to a separate call before `setModules`.
+
+---
+
 ## [0.1.1] - 2026-04-13
 
 ### Fixed

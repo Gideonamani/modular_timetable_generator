@@ -178,6 +178,21 @@ export function ModuleSidebar({
 }: ModuleSidebarProps) {
   const importInputRef = React.useRef<HTMLInputElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [clearPending, setClearPending] = React.useState(false);
+  const clearTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleClearClick = () => {
+    if (clearPending) {
+      // Second click within window — execute
+      clearAllModules();
+      setClearPending(false);
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    } else {
+      // First click — arm and auto-cancel after 2s
+      setClearPending(true);
+      clearTimerRef.current = setTimeout(() => setClearPending(false), 2000);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -456,11 +471,16 @@ export function ModuleSidebar({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-neutral-500 hover:text-red-500 hover:bg-red-50"
-                  onClick={clearAllModules}
+                  className={cn(
+                    "h-8 transition-colors",
+                    clearPending
+                      ? "text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700"
+                      : "text-neutral-500 hover:text-red-500 hover:bg-red-50"
+                  )}
+                  onClick={handleClearClick}
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                  Clear
+                  {clearPending ? 'Sure?' : 'Clear'}
                 </Button>
               )}
             </div>
