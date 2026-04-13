@@ -52,7 +52,7 @@ This document outlines the planned trajectory for the project. For a historical 
 ### Exports & Sharing
 - [x] **Richer JSON template** — exported JSON now includes `startDate`, `endDate`, `skipWeekends`, and `holidays`; import restores the full schedule state. Old module-only templates remain compatible.
 - [x] **Timestamped export filenames** — all exported files now embed a `YYYY-MM-DD_HH-mm` timestamp; no more `(1)`, `(2)` collisions.
-- [ ] **Export file size reduction** — generated PDFs and PNGs are disproportionately large for their page count. Potential approaches: lower the `pixelRatio` from 2× to 1.5× for PDF (2× is only needed for Retina screens, not for print), use JPEG instead of PNG for the image embedded in the PDF (significantly smaller for colour-heavy content), and run the final PNG through a compression step (e.g. `canvas.toBlob` with a quality parameter, or a WASM-based optimiser like `@jsquash/png`). Worth benchmarking each option against a representative timetable before committing to one.
+- [x] **PDF export file size reduction** — lowered capture `pixelRatio` from 2× to 1.5× and switched per-page images from PNG to JPEG at 0.92 quality; canvas pre-filled white to handle JPEG's lack of alpha. PNG exports unchanged.
 - [ ] **Shareable URL** — encode current schedule state into a URL for easy sharing
 - [ ] **Google Calendar Sync** — push the schedule directly to a Google Calendar
 - [ ] **Print-Optimized View** — clean print stylesheet for `Ctrl+P`

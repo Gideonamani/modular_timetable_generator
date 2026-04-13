@@ -167,8 +167,10 @@ export function useExports({
         .filter(b => b >= 0 && b <= srcHeight)
         .sort((a, b) => a - b);
 
+      // 1.5× is sufficient for print quality and reduces canvas area to ~56% of 2×.
+      // 2× is only needed for Retina screen rendering, not for PDF output.
       const dataUrl = await toPng(element, {
-        pixelRatio: 2, width: srcWidth, height: srcHeight,
+        pixelRatio: 1.5, width: srcWidth, height: srcHeight,
         style: { transform: 'scale(1)', transformOrigin: 'top left' },
       });
 
@@ -229,13 +231,19 @@ export function useExports({
         canvas.height = cropH;
         const ctx = canvas.getContext('2d');
         if (!ctx) continue;
+        // Fill white before drawing — JPEG has no alpha channel and transparent
+        // pixels would otherwise render as black in the PDF.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, cropY, imgPixelWidth, cropH, 0, 0, imgPixelWidth, cropH);
 
         // Clamp to printableHeight as a safety net — correct break points mean this
         // should never trigger in practice, but prevents content overflowing the page
         // if a slice ends up fractionally over due to rounding.
         const slicePdfHeight = Math.min(sliceSrcHeight * scale, printableHeight);
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', MARGIN, MARGIN, printableWidth, slicePdfHeight);
+        // JPEG at 0.92 quality: dramatically smaller than PNG for colour-heavy content
+        // (coloured module cells, backgrounds) with no visible quality loss in print.
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', MARGIN, MARGIN, printableWidth, slicePdfHeight);
 
         pdf.setFontSize(9);
         pdf.setTextColor(150, 150, 150);

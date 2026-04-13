@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-04-13
+
+### Changed
+- **PDF Export File Size**: Significantly reduced PDF file sizes through two changes applied to the PDF pipeline only (PNG exports are unchanged):
+    - Capture `pixelRatio` lowered from `2×` to `1.5×` — reduces the raw canvas area to ~56% of its previous size. `2×` is Retina-screen quality and unnecessary for print output.
+    - Per-page images embedded in the PDF are now encoded as **JPEG at 0.92 quality** instead of PNG. JPEG compresses colour-heavy content (coloured module cells, row backgrounds) dramatically better than PNG with no visible quality difference in print. The canvas is pre-filled with white before drawing to prevent transparent pixels rendering as black (JPEG has no alpha channel).
+
+---
+
 ## [0.1.3] - 2026-04-13
 
 ### Added
