@@ -69,6 +69,15 @@ src/
     useDebouncedEffect.ts      # debounced localStorage writes
 ```
 
+## Project Management
+
+This project maintains a clear distinction between past achievements and future goals:
+
+- **[CHANGELOG.md](file:///c:/Users/user/KeonGeraldo/CodeProjects/modular_timetable_generator/CHANGELOG.md)**: A historical record of all stable releases and significant changes.
+- **[ROADMAP.md](file:///c:/Users/user/KeonGeraldo/CodeProjects/modular_timetable_generator/ROADMAP.md)**: A forward-looking document outlining planned features, current priorities, and experimental ideas.
+
+We follow [Semantic Versioning](https://semver.org/) and the [Keep a Changelog](https://keepachangelog.com/) format to ensure the project remains maintainable and transparent as it grows.
+
 ## License
 
 See [LICENSE](LICENSE).
