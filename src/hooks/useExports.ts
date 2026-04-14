@@ -1,7 +1,7 @@
 import * as React from "react";
 import { format, addDays } from "date-fns";
 import { toPng, toSvg } from "html-to-image";
-import { Module, DaySchedule } from "../types";
+import { Module, DaySchedule, ViewMode } from "../types";
 
 interface ExportOptions {
   schedule: DaySchedule[];
@@ -11,6 +11,7 @@ interface ExportOptions {
   endDate: Date;
   holidays: Date[];
   skipWeekends: boolean;
+  viewMode: ViewMode;
   modules: Module[];
   setModules: (modules: Module[]) => void;
   setTimetableTitle: (title: string) => void;
@@ -29,6 +30,7 @@ export function useExports({
   endDate,
   holidays,
   skipWeekends,
+  viewMode,
   modules,
   setModules,
   setTimetableTitle,
@@ -159,6 +161,8 @@ export function useExports({
         startDate,
         endDate,
         modules,
+        viewMode,
+        skipWeekends,
       });
       // Cast needed because TypeScript can't statically verify that
       // TimetablePDF's return type satisfies DocumentProps — it wraps <Document> internally.

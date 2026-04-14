@@ -81,7 +81,7 @@ export function TimetablePreview({
                     isOutOfRange ? "text-neutral-400" : "text-neutral-700 dark:text-neutral-300",
                     scheduleDay?.isHoliday && "text-red-600"
                   )}>
-                    {format(date, 'd')}
+                    {format(date, 'MMM d')}
                   </span>
                   {scheduleDay?.isHoliday && (
                     <span className="text-[10px] font-bold uppercase text-red-500 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-sm">Holiday</span>

@@ -65,6 +65,7 @@ export default function App() {
     endDate,
     holidays,
     skipWeekends,
+    viewMode,
     modules: moduleState.modules,
     setModules: moduleState.setModules,
     setTimetableTitle,
