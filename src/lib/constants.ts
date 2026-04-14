@@ -12,9 +12,9 @@ export const COLORS = [
 ];
 
 export const DEFAULT_MODULES = [
-  { id: '1', name: 'Introduction', days: 2, color: '#f87171' },
-  { id: '2', name: 'Core Concepts', days: 5, color: '#fbbf24' },
-  { id: '3', name: 'Advanced Topics', days: 3, color: '#34d399' },
+  { id: '1', name: 'Introduction', days: 2, color: '#f87171', hasExamDay: true },
+  { id: '2', name: 'Core Concepts', days: 5, color: '#fbbf24', hasExamDay: true },
+  { id: '3', name: 'Advanced Topics', days: 3, color: '#34d399', hasExamDay: true },
 ];
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

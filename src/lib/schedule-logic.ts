@@ -25,7 +25,7 @@ export function generateSchedule(
       result.push({ date: currentDate, isWeekend: isWknd, isHoliday });
     } else {
       if (currentModuleIndex < modules.length) {
-        const isExam = currentModuleDaysLeft === 1;
+        const isExam = currentModuleDaysLeft === 1 && modules[currentModuleIndex].hasExamDay !== false;
         result.push({
           date: currentDate,
           isWeekend: false,

@@ -4,6 +4,7 @@ export type Module = {
   days: number;
   color: string;
   instructor?: string;
+  hasExamDay?: boolean;
 };
 
 export type DaySchedule = {

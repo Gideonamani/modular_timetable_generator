@@ -8,6 +8,7 @@ export function useModules(initialModules: Module[]) {
   const [newModuleDays, setNewModuleDays] = React.useState<number | ''>(1);
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
   const [newModuleColor, setNewModuleColor] = React.useState('');
+  const [newModuleHasExamDay, setNewModuleHasExamDay] = React.useState(true);
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
   const [formError, setFormError] = React.useState('');
   const [undoSnapshot, setUndoSnapshot] = React.useState<Module[] | null>(null);
@@ -29,11 +30,13 @@ export function useModules(initialModules: Module[]) {
       days: Number(newModuleDays),
       color,
       instructor: newModuleInstructor.trim() || undefined,
+      hasExamDay: newModuleHasExamDay,
     }]);
     setNewModuleName('');
     setNewModuleDays(1);
     setNewModuleInstructor('');
     setNewModuleColor('');
+    setNewModuleHasExamDay(true);
     setFormError('');
   };
 
@@ -97,6 +100,7 @@ export function useModules(initialModules: Module[]) {
     newModuleDays, setNewModuleDays,
     newModuleInstructor, setNewModuleInstructor,
     newModuleColor, setNewModuleColor,
+    newModuleHasExamDay, setNewModuleHasExamDay,
     editingModuleId, setEditingModuleId,
     formError,
     canUndo: undoSnapshot !== null,

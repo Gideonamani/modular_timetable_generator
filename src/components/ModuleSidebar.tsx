@@ -55,6 +55,8 @@ interface ModuleSidebarProps {
   setNewModuleInstructor: (instructor: string) => void;
   newModuleColor: string;
   setNewModuleColor: (color: string) => void;
+  newModuleHasExamDay: boolean;
+  setNewModuleHasExamDay: (v: boolean) => void;
   formError: string;
   editingModuleId: string | null;
   setEditingModuleId: (id: string | null) => void;
@@ -118,7 +120,19 @@ function SortableModuleRow({ module, isEditing, onEdit, onDoneEdit, onUpdate, on
                 className="h-8 w-10 rounded cursor-pointer border border-neutral-200 dark:border-neutral-700 p-0.5 bg-white dark:bg-neutral-800" title="Pick a color" />
             </div>
           </div>
-          <div className="flex justify-end mt-1">
+          <div className="flex items-center justify-between mt-1">
+            <div className="flex items-center gap-2">
+              <input
+                id={`exam-day-${module.id}`}
+                type="checkbox"
+                checked={module.hasExamDay !== false}
+                onChange={(e) => onUpdate({ hasExamDay: e.target.checked })}
+                className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
+              />
+              <Label htmlFor={`exam-day-${module.id}`} className="text-xs cursor-pointer select-none">
+                Last day is exam day
+              </Label>
+            </div>
             <Button size="sm" className="h-7 px-3 text-xs" onClick={onDoneEdit}>Done</Button>
           </div>
         </div>
@@ -169,6 +183,7 @@ export function ModuleSidebar({
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
   newModuleColor, setNewModuleColor,
+  newModuleHasExamDay, setNewModuleHasExamDay,
   formError,
   editingModuleId, setEditingModuleId,
   exportToJSON, importFromJSON,
@@ -558,6 +573,19 @@ export function ModuleSidebar({
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="new-module-exam-day"
+              type="checkbox"
+              checked={newModuleHasExamDay}
+              onChange={(e) => setNewModuleHasExamDay(e.target.checked)}
+              className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
+            />
+            <Label htmlFor="new-module-exam-day" className="text-xs cursor-pointer select-none">
+              Last day is exam day
+            </Label>
           </div>
 
           {formError && (
