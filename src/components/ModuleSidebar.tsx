@@ -62,6 +62,7 @@ interface ModuleSidebarProps {
   formError: string;
   editingModuleId: string | null;
   setEditingModuleId: (id: string | null) => void;
+  workingDays: number;
   exportToJSON: () => void;
   importFromJSON: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isDarkMode: boolean;
@@ -235,6 +236,7 @@ export function ModuleSidebar({
   newModuleType, setNewModuleType,
   formError,
   editingModuleId, setEditingModuleId,
+  workingDays,
   exportToJSON, importFromJSON,
   isDarkMode, setIsDarkMode,
   sheetUrl, setSheetUrl,
@@ -562,7 +564,8 @@ export function ModuleSidebar({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-2">
-            {/* Module / Gap toggle */}
+            {/* Module / Gap toggle + day counter */}
+            <div className="flex items-center gap-3">
             <div className="flex items-center border dark:border-neutral-700 rounded-md p-0.5 bg-neutral-50 dark:bg-neutral-800 self-start">
               <button
                 type="button"
@@ -588,6 +591,33 @@ export function ModuleSidebar({
               >
                 Gap
               </button>
+            </div>
+            {(() => {
+              const totalModuleDays = modules.reduce((sum, m) => sum + m.days, 0);
+              const isExact = totalModuleDays === workingDays;
+              const isOver = totalModuleDays > workingDays;
+              return (
+                <span
+                  className={cn(
+                    "text-sm font-semibold tabular-nums",
+                    isOver
+                      ? "text-red-500 dark:text-red-400"
+                      : isExact
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-green-300 dark:text-green-700"
+                  )}
+                  title={
+                    isOver
+                      ? `${totalModuleDays - workingDays} day(s) over the available working days`
+                      : isExact
+                      ? 'Modules fill the schedule exactly'
+                      : `${workingDays - totalModuleDays} working day(s) unscheduled`
+                  }
+                >
+                  {totalModuleDays} / {workingDays}d
+                </span>
+              );
+            })()}
             </div>
 
             <div className="flex gap-2 items-end">

@@ -52,6 +52,11 @@ export default function App() {
     [startDate, endDate, moduleState.modules, skipWeekends, holidays]
   );
 
+  const workingDays = React.useMemo(
+    () => schedule.filter(d => !d.isWeekend && !d.isHoliday).length,
+    [schedule]
+  );
+
   const exports = useExports({
     schedule,
     timetableTitle,
@@ -114,6 +119,7 @@ export default function App() {
             newModuleType={moduleState.newModuleType} setNewModuleType={moduleState.setNewModuleType}
             formError={moduleState.formError}
             editingModuleId={moduleState.editingModuleId} setEditingModuleId={moduleState.setEditingModuleId}
+            workingDays={workingDays}
             exportToJSON={exports.exportToJSON}
             importFromJSON={exports.importFromJSON}
             isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}
