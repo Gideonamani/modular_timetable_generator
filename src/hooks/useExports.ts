@@ -1,9 +1,7 @@
 import * as React from "react";
 import { format, addDays } from "date-fns";
 import { toPng, toSvg } from "html-to-image";
-import { jsPDF } from "jspdf";
 import { Module, DaySchedule } from "../types";
-import { computePages } from "../lib/pdf-pagination";
 
 interface ExportOptions {
   schedule: DaySchedule[];
@@ -146,135 +144,30 @@ export function useExports({
   };
 
   const exportToPDF = async () => {
-    const element = document.getElementById('timetable-container');
-    if (!element) return;
-
-    // Also unlock the overflow-x-auto wrapper so it never clips the capture
-    const scrollWrapper = element.closest<HTMLElement>('.overflow-x-auto');
-    const originalWrapperOverflow = scrollWrapper?.style.overflow ?? '';
-
     setIsExporting(true);
-    const originalBg = element.style.backgroundColor;
-    const originalPadding = element.style.padding;
-    const originalOverflow = element.style.overflow;
-    element.style.backgroundColor = '#ffffff';
-    element.style.padding = '24px';
-    element.style.overflow = 'visible';
-    if (scrollWrapper) scrollWrapper.style.overflow = 'visible';
-    element.classList.add('export-mode');
-
-    // Wait two animation frames so the browser fully reflows after the style changes
-    await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
-
     try {
-      const srcWidth = element.scrollWidth;
-      const srcHeight = element.scrollHeight;
-      const breakPoints: number[] = [0];
-
-      // getBoundingClientRect() gives viewport-relative coordinates for every element.
-      // Taking (child.rect - container.rect) cancels the scroll offset, giving the correct
-      // position of any child relative to the container top — regardless of page scroll.
-      // This works even though #timetable-container is position:static (not an offsetParent),
-      // which made the previous offsetParent-walking approach return wrong values.
-      const containerRect = element.getBoundingClientRect();
-
-      // List view — break after the bottom edge of each <tr>
-      element.querySelectorAll<HTMLElement>('tr').forEach(row => {
-        breakPoints.push(Math.round(row.getBoundingClientRect().bottom - containerRect.top));
+      // Dynamically import so the renderer's heavy internals are code-split
+      // and don't inflate the initial bundle.
+      const [{ pdf }, { TimetablePDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../components/TimetablePDF'),
+      ]);
+      const element = React.createElement(TimetablePDF, {
+        schedule,
+        timetableTitle,
+        timetableSubtitle,
+        startDate,
+        endDate,
+        modules,
       });
-
-      // Grid view — the calendar is a CSS grid of <div>s, not a <table>.
-      // Group cells by their rounded top edge to identify each week-row, then
-      // take the maximum bottom edge of that group as the break point.
-      const gridContainer = element.querySelector<HTMLElement>('[class*="grid-cols"]');
-      if (gridContainer) {
-        const rowBottomByTop = new Map<number, number>();
-        Array.from(gridContainer.querySelectorAll<HTMLElement>(':scope > div')).forEach(cell => {
-          const rect = cell.getBoundingClientRect();
-          const relTop  = Math.round(rect.top  - containerRect.top);
-          const relBottom = Math.round(rect.bottom - containerRect.top);
-          rowBottomByTop.set(relTop, Math.max(rowBottomByTop.get(relTop) ?? 0, relBottom));
-        });
-        rowBottomByTop.forEach(bottom => breakPoints.push(bottom));
-      }
-
-      // Legend section — prefer not to split it across pages
-      const legendEl = element.querySelector<HTMLElement>('[class*="border-t"]');
-      if (legendEl) {
-        breakPoints.push(Math.round(legendEl.getBoundingClientRect().top - containerRect.top));
-      }
-
-      breakPoints.push(srcHeight);
-
-      const A4_WIDTH = 595.28;
-      const A4_HEIGHT = 841.89;
-      const MARGIN = 28;
-      const FOOTER_HEIGHT = 20;
-      const printableWidth = A4_WIDTH - MARGIN * 2;
-      const printableHeight = A4_HEIGHT - MARGIN * 2 - FOOTER_HEIGHT;
-      const scale = printableWidth / srcWidth;
-
-      const pages = computePages(breakPoints, srcHeight, scale, printableHeight);
-
-      // 1.5× is sufficient for print quality and reduces canvas area to ~56% of 2×.
-      // 2× is only needed for Retina screen rendering, not for PDF output.
-      const dataUrl = await toPng(element, {
-        pixelRatio: 1.5, width: srcWidth, height: srcHeight,
-        style: { transform: 'scale(1)', transformOrigin: 'top left' },
-      });
-
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise<void>(resolve => { img.onload = () => resolve(); });
-
-      const imgPixelWidth = img.naturalWidth;
-      const imgPixelHeight = img.naturalHeight;
-      // Physical pixel : CSS pixel ratio from the actual captured image
-      const pxRatio = imgPixelHeight / srcHeight;
-
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-
-      for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
-        if (pageIdx > 0) pdf.addPage();
-        const { srcTop, srcBottom } = pages[pageIdx];
-        const sliceSrcHeight = srcBottom - srcTop;
-        const cropY = Math.floor(srcTop * pxRatio);
-        const cropH = Math.min(Math.ceil(sliceSrcHeight * pxRatio), imgPixelHeight - cropY);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = imgPixelWidth;
-        canvas.height = cropH;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) continue;
-        // Fill white before drawing — JPEG has no alpha channel and transparent
-        // pixels would otherwise render as black in the PDF.
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, cropY, imgPixelWidth, cropH, 0, 0, imgPixelWidth, cropH);
-
-        // Clamp to printableHeight as a safety net — correct break points mean this
-        // should never trigger in practice, but prevents content overflowing the page
-        // if a slice ends up fractionally over due to rounding.
-        const slicePdfHeight = Math.min(sliceSrcHeight * scale, printableHeight);
-        // JPEG at 0.92 quality: dramatically smaller than PNG for colour-heavy content
-        // (coloured module cells, backgrounds) with no visible quality loss in print.
-        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', MARGIN, MARGIN, printableWidth, slicePdfHeight);
-
-        pdf.setFontSize(9);
-        pdf.setTextColor(150, 150, 150);
-        const footerText = `Page ${pageIdx + 1} of ${pages.length}`;
-        pdf.text(footerText, (A4_WIDTH - pdf.getTextWidth(footerText)) / 2, A4_HEIGHT - MARGIN + 4);
-      }
-
-      pdf.save(getFilename('pdf'));
+      // Cast needed because TypeScript can't statically verify that
+      // TimetablePDF's return type satisfies DocumentProps — it wraps <Document> internally.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const blob = await pdf(element as any).toBlob();
+      if (blob) downloadBlob(blob, getFilename('pdf'));
     } catch (err) {
       console.error('Failed to export PDF', err);
     } finally {
-      element.style.backgroundColor = originalBg;
-      element.style.padding = originalPadding;
-      element.style.overflow = originalOverflow;
-      if (scrollWrapper) scrollWrapper.style.overflow = originalWrapperOverflow;
-      element.classList.remove('export-mode');
       setIsExporting(false);
     }
   };
