@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-04-14
+
+### Fixed
+- **Mobile: export buttons overflow** — Added `flex-wrap` to the Preview toolbar and made button labels hidden on mobile (icon-only below `sm`), preventing horizontal overflow on small screens.
+- **Mobile: module action buttons inaccessible** — Edit, Duplicate, and Delete buttons on module rows were `opacity-0` until hover, which doesn't exist on touch devices. They are now always visible on mobile and revert to hover-only reveal on `sm+` screens.
+- **Mobile: timetable table column widths and wrapping** — Narrowed the Date column (`w-[72px]`) and Day column (`w-[52px]`) on mobile to give the Module / Activity column room to breathe. Day names shorten to three-letter abbreviations (Mon, Tue, Wed…) on mobile and expand to full names on `sm+`. The timetable container's `min-w-[600px]` is now scoped to `sm+` only, so on mobile the table fills the viewport and the module column wraps long names. The EXAM DAY badge and instructor are rendered on a dedicated line below the module name so they are always visible regardless of name length. Root cause of original clipping was `TableCell`'s default `whitespace-nowrap`; overridden with `whitespace-normal`.
+- **Mobile: module list scroll trap** — The `ScrollArea` holding the module list used a fixed `h-[300px]` which created a nested scroll context inside the page scroll. Removed the height constraint entirely below `sm` so the list expands naturally; the fixed height and custom scrollbar are retained on `sm+` desktop layouts. This also fixes the module edit form being clipped — expanding a module for editing now pushes content down naturally rather than hiding it behind the scroll boundary.
+- **Mobile: date picker button text** — Start / End Date buttons showed the full `PPP` format ("April 13th, 2026") which was cramped in the 50%-width grid on mobile. Now shows the shorter `MMM d, yyyy` format ("Apr 13, 2026") on mobile, falling back to the full format on `sm+`.
+
+---
+
 ## [0.1.5] - 2026-04-13
 
 ### Added

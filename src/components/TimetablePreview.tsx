@@ -174,7 +174,7 @@ export function TimetablePreview({
 
       <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm bg-white dark:bg-neutral-900 transition-colors ring-1 ring-foreground/10">
         <div className="overflow-x-auto">
-          <div id="timetable-container" className="min-w-[600px] bg-white dark:bg-neutral-900 transition-colors">
+          <div id="timetable-container" className="sm:min-w-[600px] bg-white dark:bg-neutral-900 transition-colors">
             <div className="p-6 border-b border-neutral-100 dark:border-neutral-800">
               <input
                 type="text"
@@ -198,11 +198,11 @@ export function TimetablePreview({
             </div>
             
             {viewMode === 'list' ? (
-              <Table>
+              <Table className="table-fixed">
                 <TableHeader>
                   <TableRow className="bg-neutral-50/50 dark:bg-neutral-800/50 hover:bg-neutral-50/50 dark:hover:bg-neutral-800/50 border-neutral-100 dark:border-neutral-800">
-                    <TableHead className="w-[120px] font-semibold dark:text-neutral-200">Date</TableHead>
-                    <TableHead className="w-[100px] font-semibold dark:text-neutral-200">Day</TableHead>
+                    <TableHead className="w-[72px] sm:w-[100px] font-semibold dark:text-neutral-200">Date</TableHead>
+                    <TableHead className="w-[52px] sm:w-[80px] font-semibold dark:text-neutral-200">Day</TableHead>
                     <TableHead className="font-semibold dark:text-neutral-200">Module / Activity</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -227,30 +227,37 @@ export function TimetablePreview({
                         <TableCell className={cn("font-medium dark:text-neutral-300", (day.isWeekend || day.isHoliday) && "font-normal")}>
                           {format(day.date, "MMM d")}
                         </TableCell>
-                        <TableCell className="dark:text-neutral-400">{format(day.date, "EEEE")}</TableCell>
-                        <TableCell>
+                        <TableCell className="dark:text-neutral-400">
+                          <span className="hidden sm:inline">{format(day.date, "EEEE")}</span>
+                          <span className="sm:hidden">{format(day.date, "EEE")}</span>
+                        </TableCell>
+                        <TableCell className="whitespace-normal break-words min-w-0">
                           {day.isHoliday ? (
                             <span className="font-medium text-red-500">Holiday / Special Day</span>
                           ) : day.isWeekend ? (
                             <span className="italic text-neutral-400">Weekend</span>
                           ) : day.module ? (
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-2">
-                                <div 
-                                  className="w-2.5 h-2.5 rounded-full shrink-0" 
+                                <div
+                                  className="w-2.5 h-2.5 rounded-full shrink-0"
                                   style={{ backgroundColor: day.module.color }}
                                 />
-                                <span className="font-medium text-neutral-700 dark:text-neutral-300">{day.module.name}</span>
-                                {day.isExamDay && (
-                                  <span className="text-[10px] font-bold uppercase text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-sm ml-2">
-                                    Exam Day
-                                  </span>
-                                )}
+                                <span className="font-medium text-neutral-700 dark:text-neutral-300 break-words min-w-0">{day.module.name}</span>
                               </div>
-                              {day.module.instructor && (
-                                <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-[18px]">
-                                  Instructor: {day.module.instructor}
-                                </span>
+                              {(day.isExamDay || day.module.instructor) && (
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 ml-[18px]">
+                                  {day.isExamDay && (
+                                    <span className="text-[10px] font-bold uppercase text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-sm">
+                                      Exam Day
+                                    </span>
+                                  )}
+                                  {day.module.instructor && (
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                      {day.module.instructor}
+                                    </span>
+                                  )}
+                                </div>
                               )}
                             </div>
                           ) : (

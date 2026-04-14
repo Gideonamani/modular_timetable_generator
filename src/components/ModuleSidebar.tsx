@@ -141,7 +141,7 @@ function SortableModuleRow({ module, isEditing, onEdit, onDoneEdit, onUpdate, on
               </p>
             </div>
           </div>
-          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-blue-500 shrink-0" onClick={onDuplicate} title="Duplicate">
               <Copy className="h-4 w-4" />
             </Button>
@@ -255,8 +255,13 @@ export function ModuleSidebar({
                       !startDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                    <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                    {startDate ? (
+                      <>
+                        <span className="sm:hidden truncate">{format(startDate, "MMM d, yyyy")}</span>
+                        <span className="hidden sm:inline">{format(startDate, "PPP")}</span>
+                      </>
+                    ) : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -280,8 +285,13 @@ export function ModuleSidebar({
                       !endDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                    <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                    {endDate ? (
+                      <>
+                        <span className="sm:hidden truncate">{format(endDate, "MMM d, yyyy")}</span>
+                        <span className="hidden sm:inline">{format(endDate, "PPP")}</span>
+                      </>
+                    ) : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -554,7 +564,7 @@ export function ModuleSidebar({
             <p className="text-sm text-red-500 -mt-1">{formError}</p>
           )}
 
-          <ScrollArea className="h-[300px] pr-4">
+          <ScrollArea className="sm:h-[300px] pr-4">
             <div className="space-y-2 mt-4">
               {modules.length === 0 ? (
                 <p className="text-sm text-neutral-500 text-center py-4 border border-dashed rounded-md">No modules added yet.</p>
