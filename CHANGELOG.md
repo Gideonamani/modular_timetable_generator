@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-04-14
+
+### Added
+- **SVG Export**: New "SVG" button (distinct `FileCode2` icon) exports the timetable as a fully scalable `.svg` file using `html-to-image`'s `toSvg()`. Ideal for Figma / Illustrator workflows. A tooltip notes that text is wrapped in `<foreignObject>` and may not be selectable in all viewers.
+- **Button Tooltips**: All 7 toolbar buttons in the Preview panel (List, Grid, PNG, SVG, CSV, iCal, PDF) now carry descriptive `title` attributes so their purpose is clear on hover.
+- **Exam Day Opt-out**: Each module now has a `hasExamDay` flag (default `true`). An "Include exam day" checkbox in the add/edit form lets users uncheck it to prevent the last day of a module from being flagged as an exam day. Fully backward-compatible — existing data without the field is treated as `true`.
+- **Gap Pseudo-module**: A new "Gap" module type lets users insert explicitly named breaks between modules (e.g. "Reading Week", "Study Break"). Gaps share the module infrastructure (name, days, optional description) but render distinctly: dashed border, square icon, italic muted text, and a "GAP" badge. The colour picker is shown but visually disabled (fixed light grey). Gap days are never flagged as exam days.
+- **Live Day Counter**: A `X / Yd` counter sits next to the Module/Gap toggle pill in the sidebar, showing scheduled days vs. available working days in real time. Colour-coded: green-600 = exact fit, faint green = gap (under-scheduled), red-500 = overrun.
+- **`@react-pdf/renderer` PDF Engine**: Replaced the `html-to-image` + JPEG-slice + `jsPDF` screenshot pipeline with a native `@react-pdf/renderer` document component (`TimetablePDF.tsx`). PDFs now contain real, selectable, searchable text; pagination is handled by the PDF engine (no more DOM measurement); output is identical across devices (mobile and desktop produce the same PDF). Vite config extended with `cjsCompatPlugin` to shim `base64-js` as a proper ESM module and `optimizeDeps.include` to pre-bundle the renderer.
+- **PDF Grid View**: `TimetablePDF` branches on the active view mode — list view renders the familiar date/day/module table; grid view renders a calendar-style layout with week rows, day-name column headers (fixed, repeating on every page), and colour-tinted module blocks. Week rows use `wrap={false}` to prevent a week from splitting across pages.
+- **PDF Respects Active View Mode**: The exported PDF now mirrors whichever view (list or grid) is active in the app at export time. `viewMode` and `skipWeekends` are threaded from `App` → `useExports` → `TimetablePDF`.
+
+### Fixed
+- **PDF Row Cutting (Permanent Fix)**: The previous DOM-measurement-based pagination is fully replaced by `@react-pdf/renderer`'s native engine, permanently eliminating the subpixel drift that caused rows to split at page boundaries in long timetables.
+- **Grid Date Numbers Missing Month**: Grid view cells (both frontend and PDF) now display `MMM d` (e.g. "Apr 13") instead of a bare day number, making the month always visible without having to cross-reference the header.
+
+### Changed
+- **PDF Export Pipeline**: `exportToPDF` in `useExports` no longer captures a DOM screenshot. It dynamically imports `@react-pdf/renderer` and `TimetablePDF`, calls `pdf().toBlob()`, and downloads the result. The old `computePages()` / `html-to-image` / `jsPDF` pipeline and its associated test file are removed.
+
+---
+
 ## [0.1.6] - 2026-04-14
 
 ### Fixed

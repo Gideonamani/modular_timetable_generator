@@ -17,6 +17,13 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **Conditional Hook Call (`ModuleSidebar`)** — hoisted `useSensors(...)` to component top; was called conditionally inside a ternary
 - [x] **`setState` Side-Effect in Updater (`useModules`)** — separated `setUndoSnapshot` into its own call before `setModules`
 - [x] **Clear All Button** — replaced `window.confirm()` (silently suppressed in many contexts) with inline double-click confirmation
+- [x] **SVG Export** — `toSvg()` download via `html-to-image`; distinct `FileCode2` icon; tooltip caveat about `<foreignObject>` text selectability
+- [x] **Button Tooltips** — all 7 Preview toolbar buttons now carry descriptive `title` attributes
+- [x] **Exam Day Opt-out** — `hasExamDay: boolean` on `Module`; checkbox in add/edit form; defaults `true` (opt-out rather than opt-in); schedule logic respects the flag
+- [x] **Gap Pseudo-module** — explicit "Gap" type reusing module infrastructure; named, has description field, fixed grey colour, no exam day, renders distinctly in list/grid/legend and PDF
+- [x] **Live Day Counter** — `X / Yd` indicator next to the Module/Gap toggle pill; green = exact, faint green = under-scheduled, red = overrun
+- [x] **Native PDF with `@react-pdf/renderer`** — replaced screenshot pipeline with a real PDF renderer; selectable text, native pagination, device-independent output; permanently fixes row-cutting
+- [x] **PDF Respects View Mode** — exported PDF matches the active list/grid view; grid renders a calendar layout with week rows, colour-tinted module blocks, and fixed day-name headers
 
 ---
 
@@ -27,7 +34,7 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **`setState` side-effect inside updater in `useModules`** — separated `setUndoSnapshot(modules)` into its own call before `setModules`; was previously a side-effect inside the updater function.
 
 ### 🟡 Medium
-- [ ] **PDF list-view rows still being cut at page boundaries** — investigation complete. The `computePages()` algorithm is proven correct by 16 unit tests (all pass). Root cause of residual cutting is DOM measurement drift: `getBoundingClientRect()` measures the live DOM layout while `html-to-image` renders an off-screen clone; subpixel height differences accumulate across many rows, causing 1–2 px misalignment per row that grows in long tables. The permanent fix is `@react-pdf/renderer` (see Future Ideas below) — the PDF engine handles pagination natively, bypassing DOM measurement entirely. `computePages()` and its tests remain in place as a solid foundation.
+- [x] **PDF list-view rows being cut at page boundaries** — permanently resolved by migrating to `@react-pdf/renderer`; the PDF engine handles pagination natively, bypassing DOM measurement drift entirely.
 - [x] **PNG export not unlocking overflow** — applied the same overflow-visible fix as PDF; container and wrapper are both unlocked before capture and restored after.
 - [x] **Unvalidated sheet color values** — added `resolveHexColor()` in `google-sheets.ts`; only valid `#rgb`/`#rrggbb` values are accepted, everything else falls back to the auto palette.
 
@@ -45,8 +52,8 @@ This document outlines the planned trajectory for the project. For a historical 
 - [ ] **Inline module editing** — click a module name directly on the grid to rename or change color
 
 ### Scheduling Logic
-- [ ] **Conflict / Gap Detection** — warn the user if modules overlap or leave unassigned days
-- [ ] **Buffer Days** — option to insert blank days between consecutive modules
+- [x] **Conflict / Gap Detection** — live `X / Yd` counter next to the Module/Gap pill; colour-coded green/red feedback in real time
+- [x] **Buffer Days** — implemented as explicit "Gap" pseudo-modules; users can name each gap, set its duration, and add an optional description
 - [ ] **Weighted Distribution** — let certain modules span more days relative to others
 - [ ] **Semester Templates** — save full semester configurations as reusable templates
 
@@ -54,8 +61,8 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **Richer JSON template** — exported JSON now includes `startDate`, `endDate`, `skipWeekends`, and `holidays`; import restores the full schedule state. Old module-only templates remain compatible.
 - [x] **Timestamped export filenames** — all exported files now embed a `YYYY-MM-DD_HH-mm` timestamp; no more `(1)`, `(2)` collisions.
 - [x] **PDF export file size reduction** — lowered capture `pixelRatio` from 2× to 1.5× and switched per-page images from PNG to JPEG at 0.92 quality; canvas pre-filled white to handle JPEG's lack of alpha. PNG exports unchanged.
-- [ ] **SVG Export** — add a standalone `.svg` download using `html-to-image`'s `toSvg()`. Gives designers and power users a fully scalable, resolution-independent version of the timetable that opens cleanly in Figma, Illustrator, and browsers. Note: SVG output from `html-to-image` wraps HTML in `<foreignObject>`, so text is not natively selectable in all viewers — this is a display/design export, not a replacement for PDF.
-- [ ] **Native PDF rendering with selectable text** — replace the current screenshot-to-PDF pipeline with `@react-pdf/renderer`. The timetable layout would be defined as PDF-native React components (`<Document>`, `<Page>`, `<Text>`, `<View>`), producing PDFs with real, selectable, searchable text for all module names, dates, and instructor fields. This also permanently resolves the row-cutting issue since pagination is handled by the PDF engine rather than DOM measurement. Requires maintaining a parallel layout definition alongside the existing HTML view — significant but high-payoff refactor.
+- [x] **SVG Export** — standalone `.svg` download via `html-to-image`'s `toSvg()`; distinct icon; tooltip notes `<foreignObject>` text limitation.
+- [x] **Native PDF rendering with selectable text** — migrated to `@react-pdf/renderer`; real selectable text, native pagination, device-independent output.
 - [ ] **Shareable URL** — encode current schedule state into a URL for easy sharing
 - [ ] **Google Calendar Sync** — push the schedule directly to a Google Calendar
 - [ ] **Print-Optimized View** — clean print stylesheet for `Ctrl+P`
