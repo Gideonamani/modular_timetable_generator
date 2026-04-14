@@ -9,6 +9,7 @@ export function useModules(initialModules: Module[]) {
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
   const [newModuleColor, setNewModuleColor] = React.useState('');
   const [newModuleHasExamDay, setNewModuleHasExamDay] = React.useState(true);
+  const [newModuleType, setNewModuleType] = React.useState<'module' | 'gap'>('module');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
   const [formError, setFormError] = React.useState('');
   const [undoSnapshot, setUndoSnapshot] = React.useState<Module[] | null>(null);
@@ -23,20 +24,25 @@ export function useModules(initialModules: Module[]) {
       return;
     }
     setFormError('');
-    const color = newModuleColor || COLORS[modules.length % COLORS.length];
+    const GAP_COLOR = '#e5e7eb';
+    const color = newModuleType === 'gap'
+      ? GAP_COLOR
+      : (newModuleColor || COLORS[modules.length % COLORS.length]);
     setModules(prev => [...prev, {
       id: crypto.randomUUID(),
       name: newModuleName.trim(),
       days: Number(newModuleDays),
       color,
       instructor: newModuleInstructor.trim() || undefined,
-      hasExamDay: newModuleHasExamDay,
+      hasExamDay: newModuleType === 'gap' ? false : newModuleHasExamDay,
+      type: newModuleType,
     }]);
     setNewModuleName('');
     setNewModuleDays(1);
     setNewModuleInstructor('');
     setNewModuleColor('');
     setNewModuleHasExamDay(true);
+    setNewModuleType('module');
     setFormError('');
   };
 
@@ -101,6 +107,7 @@ export function useModules(initialModules: Module[]) {
     newModuleInstructor, setNewModuleInstructor,
     newModuleColor, setNewModuleColor,
     newModuleHasExamDay, setNewModuleHasExamDay,
+    newModuleType, setNewModuleType,
     editingModuleId, setEditingModuleId,
     formError,
     canUndo: undoSnapshot !== null,

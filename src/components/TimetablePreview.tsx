@@ -89,26 +89,43 @@ export function TimetablePreview({
                 </div>
                 
                 {scheduleDay?.module && (
-                  <div 
-                    className="mt-1 text-xs p-1.5 rounded-md font-medium border flex flex-col gap-0.5"
-                    style={{ 
-                      backgroundColor: `${scheduleDay.module.color}15`,
-                      borderColor: `${scheduleDay.module.color}30`,
-                      color: isDarkMode ? '#e5e5e5' : '#171717'
-                    }}
-                    title={scheduleDay.module.name}
-                  >
-                    <div className="flex items-start gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: scheduleDay.module.color }} />
-                      <span className="leading-tight">{scheduleDay.module.name}</span>
+                  scheduleDay.module.type === 'gap' ? (
+                    <div
+                      className="mt-1 text-xs p-1.5 rounded-md border border-dashed border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-800/50 flex flex-col gap-0.5"
+                      title={scheduleDay.module.name || 'Gap'}
+                    >
+                      <div className="flex items-start gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-sm shrink-0 mt-1 border border-neutral-300 dark:border-neutral-600" />
+                        <span className="leading-tight italic text-neutral-400 dark:text-neutral-500">
+                          {scheduleDay.module.name || 'Gap'}
+                        </span>
+                      </div>
+                      {scheduleDay.module.instructor && (
+                        <span className="text-[10px] text-neutral-400 dark:text-neutral-500 ml-3 leading-tight">{scheduleDay.module.instructor}</span>
+                      )}
                     </div>
-                    {scheduleDay.module.instructor && (
-                      <span className="text-[10px] text-neutral-600 dark:text-neutral-400 ml-3 leading-tight">{scheduleDay.module.instructor}</span>
-                    )}
-                    {scheduleDay.isExamDay && (
-                      <span className="text-[10px] font-bold text-red-600 dark:text-red-400 ml-3 mt-0.5 uppercase">Exam Day</span>
-                    )}
-                  </div>
+                  ) : (
+                    <div
+                      className="mt-1 text-xs p-1.5 rounded-md font-medium border flex flex-col gap-0.5"
+                      style={{
+                        backgroundColor: `${scheduleDay.module.color}15`,
+                        borderColor: `${scheduleDay.module.color}30`,
+                        color: isDarkMode ? '#e5e5e5' : '#171717'
+                      }}
+                      title={scheduleDay.module.name}
+                    >
+                      <div className="flex items-start gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1" style={{ backgroundColor: scheduleDay.module.color }} />
+                        <span className="leading-tight">{scheduleDay.module.name}</span>
+                      </div>
+                      {scheduleDay.module.instructor && (
+                        <span className="text-[10px] text-neutral-600 dark:text-neutral-400 ml-3 leading-tight">{scheduleDay.module.instructor}</span>
+                      )}
+                      {scheduleDay.isExamDay && (
+                        <span className="text-[10px] font-bold text-red-600 dark:text-red-400 ml-3 mt-0.5 uppercase">Exam Day</span>
+                      )}
+                    </div>
+                  )
                 )}
                 
                 {!isOutOfRange && !scheduleDay?.module && !scheduleDay?.isWeekend && !scheduleDay?.isHoliday && (
@@ -252,11 +269,27 @@ export function TimetablePreview({
                           ) : day.module ? (
                             <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-2">
-                                <div
-                                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                                  style={{ backgroundColor: day.module.color }}
-                                />
-                                <span className="font-medium text-neutral-700 dark:text-neutral-300 break-words min-w-0">{day.module.name}</span>
+                                {day.module.type === 'gap' ? (
+                                  <div className="w-2.5 h-2.5 rounded-sm shrink-0 border border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800" />
+                                ) : (
+                                  <div
+                                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                                    style={{ backgroundColor: day.module.color }}
+                                  />
+                                )}
+                                <span className={cn(
+                                  "font-medium break-words min-w-0",
+                                  day.module.type === 'gap'
+                                    ? "text-neutral-400 dark:text-neutral-500 italic"
+                                    : "text-neutral-700 dark:text-neutral-300"
+                                )}>
+                                  {day.module.name || 'Gap'}
+                                </span>
+                                {day.module.type === 'gap' && (
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded-sm shrink-0">
+                                    Gap
+                                  </span>
+                                )}
                               </div>
                               {(day.isExamDay || day.module.instructor) && (
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 ml-[18px]">
@@ -293,8 +326,14 @@ export function TimetablePreview({
                 <div className="flex flex-wrap gap-4">
                   {modules.map(m => (
                     <div key={m.id} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }} />
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">{m.name} ({m.days} days)</span>
+                      {m.type === 'gap' ? (
+                        <div className="w-3 h-3 rounded-sm border border-dashed border-neutral-400 dark:border-neutral-500" />
+                      ) : (
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: m.color }} />
+                      )}
+                      <span className={cn("text-sm", m.type === 'gap' ? "text-neutral-400 dark:text-neutral-500 italic" : "text-neutral-600 dark:text-neutral-400")}>
+                        {m.name || 'Gap'} ({m.days} day{m.days !== 1 ? 's' : ''}){m.type === 'gap' ? ' — gap' : ''}
+                      </span>
                     </div>
                   ))}
                 </div>

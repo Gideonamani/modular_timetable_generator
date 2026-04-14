@@ -5,6 +5,7 @@ export type Module = {
   color: string;
   instructor?: string;
   hasExamDay?: boolean;
+  type?: 'module' | 'gap';
 };
 
 export type DaySchedule = {
