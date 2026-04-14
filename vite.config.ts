@@ -46,9 +46,11 @@ function cjsCompatPlugin(): Plugin {
       return [
         `// ESM shim for CJS package: ${specifier}`,
         `const module = { exports: {} };`,
+        `// ---- original CJS source (wrapped to avoid name conflicts) ----`,
+        `(function() {`,
         `const exports = module.exports;`,
-        `// ---- original CJS source ----`,
         cjsCode.replace(/^'use strict';?\n?/m, ''),
+        `})();`,
         `// ---- ESM exports ----`,
         `export default module.exports;`,
         ...(named.length ? [`export const { ${named.join(', ')} } = module.exports;`] : []),
