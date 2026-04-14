@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, addDays } from "date-fns";
-import { toPng } from "html-to-image";
+import { toPng, toSvg } from "html-to-image";
 import { jsPDF } from "jspdf";
 import { Module, DaySchedule } from "../types";
 import { computePages } from "../lib/pdf-pagination";
@@ -93,6 +93,48 @@ export function useExports({
       link.click();
     } catch (err) {
       console.error('Failed to export PNG', err);
+    } finally {
+      element.style.backgroundColor = originalBg;
+      element.style.padding = originalPadding;
+      element.style.overflow = originalOverflow;
+      if (scrollWrapper) scrollWrapper.style.overflow = originalWrapperOverflow;
+      element.classList.remove('export-mode');
+      setIsExporting(false);
+    }
+  };
+
+  const exportToSVG = async () => {
+    const element = document.getElementById('timetable-container');
+    if (!element) return;
+
+    const scrollWrapper = element.closest<HTMLElement>('.overflow-x-auto');
+    const originalWrapperOverflow = scrollWrapper?.style.overflow ?? '';
+
+    setIsExporting(true);
+    const originalBg = element.style.backgroundColor;
+    const originalPadding = element.style.padding;
+    const originalOverflow = element.style.overflow;
+    element.style.backgroundColor = '#ffffff';
+    element.style.padding = '24px';
+    element.style.overflow = 'visible';
+    if (scrollWrapper) scrollWrapper.style.overflow = 'visible';
+    element.classList.add('export-mode');
+
+    await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
+
+    try {
+      const width = element.scrollWidth;
+      const height = element.scrollHeight;
+      const dataUrl = await toSvg(element, {
+        width, height,
+        style: { transform: 'scale(1)', transformOrigin: 'top left' },
+      });
+      const link = document.createElement('a');
+      link.download = getFilename('svg');
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to export SVG', err);
     } finally {
       element.style.backgroundColor = originalBg;
       element.style.padding = originalPadding;
@@ -318,5 +360,5 @@ export function useExports({
     event.target.value = '';
   };
 
-  return { isExporting, exportToPNG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON };
+  return { isExporting, exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON };
 }

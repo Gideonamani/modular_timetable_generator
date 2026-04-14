@@ -133,6 +133,7 @@ export default function App() {
             modules={moduleState.modules}
             isExporting={exports.isExporting}
             exportToPNG={exports.exportToPNG}
+            exportToSVG={exports.exportToSVG}
             exportToPDF={exports.exportToPDF}
             exportToCSV={exports.exportToCSV}
             exportToICS={exports.exportToICS}

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { FileImage, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar } from "lucide-react";
+import { FileImage, FileCode2, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,6 +20,7 @@ interface TimetablePreviewProps {
   modules: Module[];
   isExporting: boolean;
   exportToPNG: () => void;
+  exportToSVG: () => void;
   exportToPDF: () => void;
   exportToCSV: () => void;
   exportToICS: () => void;
@@ -34,7 +35,7 @@ export function TimetablePreview({
   startDate, endDate,
   modules,
   isExporting,
-  exportToPNG, exportToPDF, exportToCSV, exportToICS,
+  exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS,
   isDarkMode, skipWeekends
 }: TimetablePreviewProps) {
   
@@ -139,6 +140,7 @@ export function TimetablePreview({
               size="sm"
               className="h-7 px-2"
               onClick={() => setViewMode('list')}
+              title="List view — one row per day"
             >
               <LayoutList className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">List</span>
@@ -148,24 +150,35 @@ export function TimetablePreview({
               size="sm"
               className="h-7 px-2"
               onClick={() => setViewMode('grid')}
+              title="Grid view — calendar layout"
             >
               <LayoutGrid className="h-4 w-4 sm:mr-1.5" />
               <span className="hidden sm:inline">Grid</span>
             </Button>
           </div>
-          <Button variant="outline" onClick={exportToPNG} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button variant="outline" onClick={exportToPNG} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200" title="Export as PNG image">
             <FileImage className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">{isExporting ? '...' : 'PNG'}</span>
           </Button>
-          <Button variant="outline" onClick={exportToCSV} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button
+            variant="outline"
+            onClick={exportToSVG}
+            disabled={isExporting}
+            className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200"
+            title="Export as SVG vector graphic. Note: text uses <foreignObject> and may not be selectable in all SVG viewers."
+          >
+            <FileCode2 className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isExporting ? '...' : 'SVG'}</span>
+          </Button>
+          <Button variant="outline" onClick={exportToCSV} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200" title="Export as CSV spreadsheet">
             <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">CSV</span>
           </Button>
-          <Button variant="outline" onClick={exportToICS} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200">
+          <Button variant="outline" onClick={exportToICS} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200" title="Export as iCalendar (.ics) — import into Google Calendar, Outlook, etc.">
             <Calendar className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">iCal</span>
           </Button>
-          <Button onClick={exportToPDF} disabled={isExporting} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900">
+          <Button onClick={exportToPDF} disabled={isExporting} className="bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900" title="Export as multi-page PDF">
             <FileText className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'PDF'}</span>
           </Button>
