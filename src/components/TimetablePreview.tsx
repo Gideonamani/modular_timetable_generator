@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { FileImage, FileCode2, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar } from "lucide-react";
+import { FileImage, FileCode2, FileText, LayoutList, LayoutGrid, FileSpreadsheet, Calendar, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +26,7 @@ interface TimetablePreviewProps {
   exportToICS: () => void;
   isDarkMode: boolean;
   skipWeekends: boolean;
+  getShareUrl: () => string;
 }
 
 export function TimetablePreview({
@@ -36,8 +37,20 @@ export function TimetablePreview({
   modules,
   isExporting,
   exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS,
-  isDarkMode, skipWeekends
+  isDarkMode, skipWeekends, getShareUrl
 }: TimetablePreviewProps) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleShare = async () => {
+    const url = getShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy share link', err);
+    }
+  };
   
   const renderGridView = () => {
     if (schedule.length === 0) return <div className="p-8 text-center text-neutral-500">Start date must be before end date.</div>;
@@ -176,6 +189,18 @@ export function TimetablePreview({
               <span className="hidden sm:inline">Grid</span>
             </Button>
           </div>
+          <Button
+            variant="outline"
+            onClick={handleShare}
+            className={cn(
+              "bg-white dark:bg-neutral-800 dark:border-neutral-700 transition-all duration-200",
+              copied ? "text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800" : "dark:text-neutral-200"
+            )}
+            title="Share Magic Link — encodes current state into the URL for instant sharing and version history."
+          >
+            <Share2 className={cn("h-4 w-4 sm:mr-2", copied && "text-green-600")} />
+            <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
+          </Button>
           <Button variant="outline" onClick={exportToPNG} disabled={isExporting} className="bg-white dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-200" title="Export as PNG image">
             <FileImage className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">{isExporting ? '...' : 'PNG'}</span>

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-04-15
+
+### Added
+- **Shareable URLs ("Magic Links")**: Implemented state-in-URL sharing using `lz-string` compression. The entire application state (modules, dates, holidays, title, view mode) is encoded into a compressed, URL-safe string.
+- **Deep Linking & Hydration**: Opening a "Magic Link" automatically hydrates the application with the shared state, enabling instant collaboration and version branching. Shared state takes precedence over local storage on mount.
+- **Share Button**: Added a dedicated "Share" button to the preview toolbar with native clipboard integration and 2-second visual "Copied!" feedback.
+- **URL State Utility**: Created `src/lib/url-state.ts` to manage the lifecycle of compressed state strings.
+
 ## [0.1.7] - 2026-04-14
 
 ### Added

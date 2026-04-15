@@ -1,6 +1,7 @@
 import * as React from "react";
 import { format, addDays } from "date-fns";
 import { toPng, toSvg } from "html-to-image";
+import LZString from "lz-string";
 import { Module, DaySchedule, ViewMode } from "../types";
 
 interface ExportOptions {
@@ -258,5 +259,22 @@ export function useExports({
     event.target.value = '';
   };
 
-  return { isExporting, exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON };
+  const getShareUrl = () => {
+    const data = {
+      timetableTitle,
+      timetableSubtitle,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      skipWeekends,
+      holidays: holidays.map(h => h.toISOString()),
+      modules,
+      viewMode,
+    };
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+    const url = new URL(window.location.href);
+    url.searchParams.set('state', compressed);
+    return url.toString();
+  };
+
+  return { isExporting, exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON, getShareUrl };
 }

@@ -11,8 +11,12 @@ import { useModules } from "./hooks/useModules";
 import { useGoogleSheets } from "./hooks/useGoogleSheets";
 import { useExports } from "./hooks/useExports";
 import { useDebouncedEffect } from "./hooks/useDebouncedEffect";
+import { getStateFromUrl } from "./lib/url-state";
 
-function loadSavedData() {
+function getInitialData() {
+  const urlState = getStateFromUrl();
+  if (urlState) return urlState;
+
   try {
     const saved = localStorage.getItem('timetable_data');
     return saved ? JSON.parse(saved) : null;
@@ -22,7 +26,7 @@ function loadSavedData() {
 }
 
 export default function App() {
-  const savedData = React.useRef(loadSavedData());
+  const savedData = React.useRef(getInitialData());
   const saved = savedData.current;
 
   const [startDate, setStartDate] = React.useState<Date>(
@@ -149,6 +153,7 @@ export default function App() {
             exportToCSV={exports.exportToCSV}
             exportToICS={exports.exportToICS}
             isDarkMode={isDarkMode}
+            getShareUrl={exports.getShareUrl}
           />
           </ErrorBoundary>
         </div>

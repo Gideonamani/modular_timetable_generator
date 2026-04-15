@@ -64,7 +64,7 @@ This document outlines the planned trajectory for the project. For a historical 
 - [x] **PDF export file size reduction** — lowered capture `pixelRatio` from 2× to 1.5× and switched per-page images from PNG to JPEG at 0.92 quality; canvas pre-filled white to handle JPEG's lack of alpha. PNG exports unchanged.
 - [x] **SVG Export** — standalone `.svg` download via `html-to-image`'s `toSvg()`; distinct icon; tooltip notes `<foreignObject>` text limitation.
 - [x] **Native PDF rendering with selectable text** — migrated to `@react-pdf/renderer`; real selectable text, native pagination, device-independent output.
-- [ ] **Shareable URL** — encode current schedule state into a URL for easy sharing
+- [ ] **Shareable URL** — encode current schedule state into a compressed/URL-safe string; enables instant sharing, collaborative "branching" (comparing options in separate tabs), and persistent chat-based version history without server storage.
 - [ ] **Google Calendar Sync** — push the schedule directly to a Google Calendar
 - [ ] **Print-Optimized View** — clean print stylesheet for `Ctrl+P`
 - [ ] **Batch Export** — export all formats (PDF, CSV, ICS, PNG) at once as a ZIP
