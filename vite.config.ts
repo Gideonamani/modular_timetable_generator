@@ -70,6 +70,26 @@ export default defineConfig(() => {
     optimizeDeps: {
       include: ['@react-pdf/renderer'],
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // React core — changes rarely, cacheable for months
+            'vendor-react': ['react', 'react-dom'],
+            // Animation library — large, always used
+            'vendor-motion': ['motion'],
+            // Drag-and-drop — only used in ModuleSidebar
+            'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+            // UI primitives (shadcn/base-ui)
+            'vendor-ui': ['@base-ui/react', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+            // Date utilities
+            'vendor-date': ['date-fns', 'react-day-picker'],
+            // Export utilities — only needed on export actions
+            'vendor-export': ['html-to-image', 'lz-string', 'papaparse'],
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify — file watching is disabled to prevent flickering during agent edits.
@@ -77,3 +97,4 @@ export default defineConfig(() => {
     },
   };
 });
+

@@ -1,7 +1,5 @@
 import * as React from "react";
 import { format, addDays } from "date-fns";
-import { toPng, toSvg } from "html-to-image";
-import LZString from "lz-string";
 import { Module, DaySchedule, ViewMode } from "../types";
 
 interface ExportOptions {
@@ -82,6 +80,7 @@ export function useExports({
     await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
 
     try {
+      const { toPng } = await import("html-to-image");
       const width = element.scrollWidth;
       const height = element.scrollHeight;
       const dataUrl = await toPng(element, {
@@ -124,6 +123,7 @@ export function useExports({
     await new Promise<void>(resolve => requestAnimationFrame(() => { requestAnimationFrame(() => { resolve(); }); }));
 
     try {
+      const { toSvg } = await import("html-to-image");
       const width = element.scrollWidth;
       const height = element.scrollHeight;
       const dataUrl = await toSvg(element, {
@@ -259,7 +259,7 @@ export function useExports({
     event.target.value = '';
   };
 
-  const getShareUrl = () => {
+  const getShareUrl = async () => {
     const data = {
       timetableTitle,
       timetableSubtitle,
@@ -270,6 +270,7 @@ export function useExports({
       modules,
       viewMode,
     };
+    const { default: LZString } = await import("lz-string");
     const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
     const url = new URL(window.location.href);
     url.searchParams.set('state', compressed);
@@ -278,3 +279,4 @@ export function useExports({
 
   return { isExporting, exportToPNG, exportToSVG, exportToPDF, exportToCSV, exportToICS, exportToJSON, importFromJSON, getShareUrl };
 }
+

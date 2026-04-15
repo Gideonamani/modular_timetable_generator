@@ -42,7 +42,8 @@ export function TimetablePreview({
   const [copied, setCopied] = React.useState(false);
 
   const handleShare = async () => {
-    const url = getShareUrl();
+    const url = await getShareUrl();
+
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);

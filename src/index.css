@@ -5,12 +5,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Smooth dark mode transition */
-*, *::before, *::after {
+/* Smooth dark mode transition - scoped to common color-changing elements to reduce layout overhead */
+body, 
+.bg-background, 
+[class*="bg-"], 
+[class*="text-"], 
+[class*="border-"] {
   transition-property: background-color, border-color, color;
   transition-duration: 200ms;
   transition-timing-function: ease;
 }
+
 
 @theme inline {
     --font-heading: var(--font-sans);

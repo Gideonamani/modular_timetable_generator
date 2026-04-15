@@ -1,4 +1,3 @@
-import Papa from 'papaparse';
 import { Module } from '../types';
 import { COLORS } from './constants';
 
@@ -33,6 +32,7 @@ export function extractGoogleSheetInfo(url: string) {
 }
 
 export async function fetchModulesFromSheet(url: string): Promise<Module[]> {
+  const { default: Papa } = await import('papaparse');
   const { spreadsheetId, gid } = extractGoogleSheetInfo(url);
   
   if (!spreadsheetId) {
@@ -43,6 +43,7 @@ export async function fetchModulesFromSheet(url: string): Promise<Module[]> {
 
   return new Promise((resolve, reject) => {
     Papa.parse(exportUrl, {
+
       download: true,
       header: true,
       skipEmptyLines: true,

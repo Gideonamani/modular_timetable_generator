@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-04-15
+
+### Changed
+- **Load Performance**: Reduced main Javascript bundle size by ~60% (from 730 KB to 292 KB) using Vite manual chunking and splitting third-party libraries (UI, motion, drag-and-drop, dates) into cacheable vendor chunks.
+- **Lazy-Loading**: Substantially deferred loading of heavy libraries (`html-to-image`, `papaparse`, `lz-string`, and `@react-pdf/renderer`). These are now dynamically imported strictly on-demand, improving initial render times.
+- **CSS Transitions**: Optimized page rendering and paint costs by replacing universal `*` style transitions with specific, targeted rules for background color and text color.
+- **Dependency Hygiene**: Cleaned up `package.json` by removing 33 unused packages (`html2canvas`, `jspdf`, `express`, `dotenv`), establishing correct `devDependencies` mapping, and enforcing nested version resolutions for compatibility.
+
 ## [0.1.8] - 2026-04-15
 
 ### Added
