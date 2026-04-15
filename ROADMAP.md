@@ -3,6 +3,7 @@
 This document outlines the planned trajectory for the project. For a historical record of what has already been delivered, see [CHANGELOG.md](file:///c:/Users/user/KeonGeraldo/CodeProjects/modular_timetable_generator/CHANGELOG.md).
 
 ## Recently Completed
+- [x] **Practical Days** — designated the final few days of a module before exams as practical/lab days; supported in scheduling logic, UI, and PDF/CSV exports
 - [x] **Logic Modularization** — extracted core functionality into `useModules`, `useGoogleSheets`, and `useExports` hooks
 - [x] **Vercel Deployment** — configured CI/CD and deployment settings for production hosting
 - [x] **Google Sheets Sync** — added ability to pull module data from external spreadsheets

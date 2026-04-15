@@ -124,6 +124,9 @@ export function TimetablePreview({
                       {scheduleDay.isExamDay && (
                         <span className="text-[10px] font-bold text-red-600 dark:text-red-400 ml-3 mt-0.5 uppercase">Exam Day</span>
                       )}
+                      {scheduleDay.isPracticalDay && (
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 ml-3 mt-0.5 uppercase">Practical</span>
+                      )}
                     </div>
                   )
                 )}
@@ -291,11 +294,16 @@ export function TimetablePreview({
                                   </span>
                                 )}
                               </div>
-                              {(day.isExamDay || day.module.instructor) && (
+                              {(day.isExamDay || day.isPracticalDay || day.module.instructor) && (
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 ml-[18px]">
                                   {day.isExamDay && (
                                     <span className="text-[10px] font-bold uppercase text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded-sm">
                                       Exam Day
+                                    </span>
+                                  )}
+                                  {day.isPracticalDay && (
+                                    <span className="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-sm">
+                                      Practical
                                     </span>
                                   )}
                                   {day.module.instructor && (

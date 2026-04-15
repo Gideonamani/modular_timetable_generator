@@ -57,6 +57,10 @@ interface ModuleSidebarProps {
   setNewModuleColor: (color: string) => void;
   newModuleHasExamDay: boolean;
   setNewModuleHasExamDay: (v: boolean) => void;
+  newModuleHasPracticalDays: boolean;
+  setNewModuleHasPracticalDays: (v: boolean) => void;
+  newModulePracticalDaysCount: number;
+  setNewModulePracticalDaysCount: (n: number) => void;
   newModuleType: 'module' | 'gap';
   setNewModuleType: (t: 'module' | 'gap') => void;
   formError: string;
@@ -151,20 +155,56 @@ function SortableModuleRow({ module, isEditing, onEdit, onDoneEdit, onUpdate, on
           </div>
           <div className="flex items-center justify-between mt-1">
             {module.type !== 'gap' ? (
-              <div className="flex items-center gap-2">
-                <input
-                  id={`exam-day-${module.id}`}
-                  type="checkbox"
-                  checked={module.hasExamDay !== false}
-                  onChange={(e) => onUpdate({ hasExamDay: e.target.checked })}
-                  className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
-                />
-                <Label htmlFor={`exam-day-${module.id}`} className="text-xs cursor-pointer select-none">
-                  Last day is exam day
-                </Label>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    id={`exam-day-${module.id}`}
+                    type="checkbox"
+                    checked={module.hasExamDay !== false}
+                    onChange={(e) => onUpdate({ hasExamDay: e.target.checked })}
+                    className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
+                  />
+                  <Label htmlFor={`exam-day-${module.id}`} className="text-xs cursor-pointer select-none">
+                    Last day is exam day
+                  </Label>
+                </div>
+                {(() => {
+                  const practicalHint = Math.ceil((module.days - 1) * 0.35);
+                  return (
+                    <div className="flex items-center gap-2">
+                      <input
+                        id={`practical-days-${module.id}`}
+                        type="checkbox"
+                        checked={module.hasPracticalDays === true}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            onUpdate({ hasPracticalDays: true, practicalDaysCount: practicalHint });
+                          } else {
+                            onUpdate({ hasPracticalDays: undefined });
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-neutral-300 accent-amber-600 dark:accent-amber-400 cursor-pointer"
+                      />
+                      <Label htmlFor={`practical-days-${module.id}`} className="text-xs cursor-pointer select-none">
+                        Mark last
+                      </Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={module.hasPracticalDays ? (module.practicalDaysCount ?? 0) : ''}
+                        placeholder={String(practicalHint)}
+                        onChange={(e) => onUpdate({ practicalDaysCount: Math.max(0, parseInt(e.target.value) || 0) })}
+                        disabled={!module.hasPracticalDays}
+                        className="h-6 w-12 text-xs px-1.5 disabled:opacity-60"
+                      />
+                      <Label className="text-xs select-none text-neutral-500">days before exam as practical</Label>
+                    </div>
+                  );
+                })()}
               </div>
             ) : <span />}
-            <Button size="sm" className="h-7 px-3 text-xs" onClick={onDoneEdit}>Done</Button>
+            <Button size="sm" className="h-7 px-3 text-xs self-end" onClick={onDoneEdit}>Done</Button>
           </div>
         </div>
       ) : (
@@ -233,6 +273,8 @@ export function ModuleSidebar({
   newModuleInstructor, setNewModuleInstructor,
   newModuleColor, setNewModuleColor,
   newModuleHasExamDay, setNewModuleHasExamDay,
+  newModuleHasPracticalDays, setNewModuleHasPracticalDays,
+  newModulePracticalDaysCount, setNewModulePracticalDaysCount,
   newModuleType, setNewModuleType,
   formError,
   editingModuleId, setEditingModuleId,
@@ -689,17 +731,52 @@ export function ModuleSidebar({
           </div>
 
           {newModuleType === 'module' && (
-            <div className="flex items-center gap-2">
-              <input
-                id="new-module-exam-day"
-                type="checkbox"
-                checked={newModuleHasExamDay}
-                onChange={(e) => setNewModuleHasExamDay(e.target.checked)}
-                className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
-              />
-              <Label htmlFor="new-module-exam-day" className="text-xs cursor-pointer select-none">
-                Last day is exam day
-              </Label>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <input
+                  id="new-module-exam-day"
+                  type="checkbox"
+                  checked={newModuleHasExamDay}
+                  onChange={(e) => setNewModuleHasExamDay(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
+                />
+                <Label htmlFor="new-module-exam-day" className="text-xs cursor-pointer select-none">
+                  Last day is exam day
+                </Label>
+              </div>
+              {(() => {
+                const practicalHint = Math.ceil(((Number(newModuleDays) || 1) - 1) * 0.35);
+                return (
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="new-module-practical-days"
+                      type="checkbox"
+                      checked={newModuleHasPracticalDays}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewModulePracticalDaysCount(practicalHint);
+                        }
+                        setNewModuleHasPracticalDays(e.target.checked);
+                      }}
+                      className="h-4 w-4 rounded border-neutral-300 accent-amber-600 dark:accent-amber-400 cursor-pointer"
+                    />
+                    <Label htmlFor="new-module-practical-days" className="text-xs cursor-pointer select-none">
+                      Mark last
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="99"
+                      value={newModuleHasPracticalDays ? newModulePracticalDaysCount : ''}
+                      placeholder={String(practicalHint)}
+                      onChange={(e) => setNewModulePracticalDaysCount(Math.max(0, parseInt(e.target.value) || 0))}
+                      disabled={!newModuleHasPracticalDays}
+                      className="h-6 w-12 text-xs px-1.5 disabled:opacity-60"
+                    />
+                    <Label className="text-xs select-none text-neutral-500">days before exam as practical</Label>
+                  </div>
+                );
+              })()}
             </div>
           )}
 

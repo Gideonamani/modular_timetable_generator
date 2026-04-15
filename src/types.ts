@@ -5,6 +5,8 @@ export type Module = {
   color: string;
   instructor?: string;
   hasExamDay?: boolean;
+  hasPracticalDays?: boolean;
+  practicalDaysCount?: number;
   type?: 'module' | 'gap';
 };
 
@@ -14,6 +16,7 @@ export type DaySchedule = {
   isHoliday?: boolean;
   module?: Module;
   isExamDay?: boolean;
+  isPracticalDay?: boolean;
 };
 
 export type ViewMode = 'list' | 'grid';

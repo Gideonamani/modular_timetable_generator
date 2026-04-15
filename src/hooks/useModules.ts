@@ -9,6 +9,8 @@ export function useModules(initialModules: Module[]) {
   const [newModuleInstructor, setNewModuleInstructor] = React.useState('');
   const [newModuleColor, setNewModuleColor] = React.useState('');
   const [newModuleHasExamDay, setNewModuleHasExamDay] = React.useState(true);
+  const [newModuleHasPracticalDays, setNewModuleHasPracticalDays] = React.useState(false);
+  const [newModulePracticalDaysCount, setNewModulePracticalDaysCount] = React.useState(0);
   const [newModuleType, setNewModuleType] = React.useState<'module' | 'gap'>('module');
   const [editingModuleId, setEditingModuleId] = React.useState<string | null>(null);
   const [formError, setFormError] = React.useState('');
@@ -35,6 +37,8 @@ export function useModules(initialModules: Module[]) {
       color,
       instructor: newModuleInstructor.trim() || undefined,
       hasExamDay: newModuleType === 'gap' ? false : newModuleHasExamDay,
+      hasPracticalDays: newModuleType === 'gap' ? false : (newModuleHasPracticalDays || undefined),
+      practicalDaysCount: newModuleType !== 'gap' && newModuleHasPracticalDays ? newModulePracticalDaysCount : undefined,
       type: newModuleType,
     }]);
     setNewModuleName('');
@@ -42,6 +46,8 @@ export function useModules(initialModules: Module[]) {
     setNewModuleInstructor('');
     setNewModuleColor('');
     setNewModuleHasExamDay(true);
+    setNewModuleHasPracticalDays(false);
+    setNewModulePracticalDaysCount(3);
     setNewModuleType('module');
     setFormError('');
   };
@@ -107,6 +113,8 @@ export function useModules(initialModules: Module[]) {
     newModuleInstructor, setNewModuleInstructor,
     newModuleColor, setNewModuleColor,
     newModuleHasExamDay, setNewModuleHasExamDay,
+    newModuleHasPracticalDays, setNewModuleHasPracticalDays,
+    newModulePracticalDaysCount, setNewModulePracticalDaysCount,
     newModuleType, setNewModuleType,
     editingModuleId, setEditingModuleId,
     formError,

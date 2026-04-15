@@ -6,6 +6,7 @@ A browser-based timetable builder that distributes study modules across a date r
 
 - **Module management** — add, edit, duplicate, reorder (drag-and-drop), and delete modules; 1-level undo on delete and clear-all
 - **Date controls** — pick start/end dates, skip weekends, and mark custom holidays
+- **Day types** — designate specific trailing days of a module as exam days or practical/lab days
 - **Live schedule preview** — list and grid view modes with color-coded modules
 - **Exports** — PNG, PDF, CSV, and ICS (calendar) formats
 - **Import/Export config** — save and restore your full setup as JSON

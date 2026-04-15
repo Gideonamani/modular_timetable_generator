@@ -178,13 +178,14 @@ export function useExports({
 
   const exportToCSV = () => {
     if (schedule.length === 0) return;
-    const headers = ['Date', 'Day', 'Module', 'Instructor', 'Is Exam Day'];
+    const headers = ['Date', 'Day', 'Module', 'Instructor', 'Is Exam Day', 'Is Practical Day'];
     const rows = schedule.map(day => [
       format(day.date, 'yyyy-MM-dd'),
       format(day.date, 'EEEE'),
       day.module?.name || (day.isHoliday ? 'Holiday' : day.isWeekend ? 'Weekend' : 'Free'),
       day.module?.instructor || '',
       day.isExamDay ? 'Yes' : 'No',
+      day.isPracticalDay ? 'Yes' : 'No',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
     downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), getFilename('csv'));

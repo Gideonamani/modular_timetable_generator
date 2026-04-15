@@ -25,15 +25,25 @@ export function generateSchedule(
       result.push({ date: currentDate, isWeekend: isWknd, isHoliday });
     } else {
       if (currentModuleIndex < modules.length) {
+        const mod = modules[currentModuleIndex];
         const isExam = currentModuleDaysLeft === 1
-          && modules[currentModuleIndex].hasExamDay !== false
-          && modules[currentModuleIndex].type !== 'gap';
+          && mod.hasExamDay !== false
+          && mod.type !== 'gap';
+        const hasExam = mod.hasExamDay !== false && mod.type !== 'gap';
+        const practicalCount = mod.practicalDaysCount ?? 3;
+        const isPractical = !isExam
+          && mod.hasPracticalDays === true
+          && mod.type !== 'gap'
+          && (hasExam
+            ? currentModuleDaysLeft <= practicalCount + 1
+            : currentModuleDaysLeft <= practicalCount);
         result.push({
           date: currentDate,
           isWeekend: false,
           isHoliday: false,
-          module: modules[currentModuleIndex],
+          module: mod,
           isExamDay: isExam,
+          isPracticalDay: isPractical || undefined,
         });
         currentModuleDaysLeft--;
 

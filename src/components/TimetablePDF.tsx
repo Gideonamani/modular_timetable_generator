@@ -151,6 +151,27 @@ const s = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: '#dc2626',
   },
+  practicalBadge: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    marginLeft: 6,
+    alignSelf: 'center',
+  },
+  practicalBadgeText: {
+    fontSize: 7,
+    fontFamily: 'Helvetica-Bold',
+    color: '#d97706',
+  },
+  gridPracticalText: {
+    fontSize: 6,
+    fontFamily: 'Helvetica-Bold',
+    color: '#d97706',
+    marginTop: 1,
+  },
   gapBadge: {
     backgroundColor: '#f3f4f6',
     borderRadius: 2,
@@ -370,6 +391,11 @@ function ModuleRow({ day }: { day: DaySchedule }) {
               <Text style={s.examBadgeText}>EXAM DAY</Text>
             </View>
           )}
+          {day.isPracticalDay && (
+            <View style={s.practicalBadge}>
+              <Text style={s.practicalBadgeText}>PRACTICAL</Text>
+            </View>
+          )}
         </View>
         {mod.instructor ? (
           <Text style={s.instructor}>{mod.instructor}</Text>
@@ -434,6 +460,9 @@ function GridCell({ date, scheduleDay, cellWidth }: {
             </Text>
             {scheduleDay?.isExamDay && (
               <Text style={s.gridExamText}>EXAM</Text>
+            )}
+            {scheduleDay?.isPracticalDay && (
+              <Text style={s.gridPracticalText}>PRACTICAL</Text>
             )}
             {mod.instructor ? (
               <Text style={s.gridInstructor}>{mod.instructor}</Text>
