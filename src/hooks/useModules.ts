@@ -38,7 +38,9 @@ export function useModules(initialModules: Module[]) {
       instructor: newModuleInstructor.trim() || undefined,
       hasExamDay: newModuleType === 'gap' ? false : newModuleHasExamDay,
       hasPracticalDays: newModuleType === 'gap' ? false : (newModuleHasPracticalDays || undefined),
-      practicalDaysCount: newModuleType !== 'gap' && newModuleHasPracticalDays ? newModulePracticalDaysCount : undefined,
+      practicalDaysCount: newModuleType !== 'gap' && newModuleHasPracticalDays
+        ? Math.min(newModulePracticalDaysCount, newModuleHasExamDay ? Number(newModuleDays) - 1 : Number(newModuleDays))
+        : undefined,
       type: newModuleType,
     }]);
     setNewModuleName('');

@@ -686,9 +686,6 @@ export function ModuleSidebar({
                   onKeyDown={(e) => e.key === 'Enter' && addModule()}
                 />
               </div>
-              <Button onClick={addModule} size="icon" className="shrink-0">
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
             <div className="flex gap-2">
               <div className="space-y-2 flex-1">
@@ -748,34 +745,44 @@ export function ModuleSidebar({
               </div>
               {(() => {
                 const practicalHint = Math.ceil(((Number(newModuleDays) || 1) - 1) * 0.35);
+                const practicalMax = newModuleHasExamDay ? (Number(newModuleDays) || 1) - 1 : (Number(newModuleDays) || 1);
+                const practicalExceeds = newModuleHasPracticalDays && newModulePracticalDaysCount > practicalMax;
                 return (
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="new-module-practical-days"
-                      type="checkbox"
-                      checked={newModuleHasPracticalDays}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setNewModulePracticalDaysCount(practicalHint);
-                        }
-                        setNewModuleHasPracticalDays(e.target.checked);
-                      }}
-                      className="h-4 w-4 rounded border-neutral-300 accent-amber-600 dark:accent-amber-400 cursor-pointer"
-                    />
-                    <Label htmlFor="new-module-practical-days" className="text-xs cursor-pointer select-none">
-                      Mark last
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="99"
-                      value={newModuleHasPracticalDays ? newModulePracticalDaysCount : ''}
-                      placeholder={String(practicalHint)}
-                      onChange={(e) => setNewModulePracticalDaysCount(Math.max(0, parseInt(e.target.value) || 0))}
-                      disabled={!newModuleHasPracticalDays}
-                      className="h-6 w-12 text-xs px-1.5 disabled:opacity-60"
-                    />
-                    <Label className="text-xs select-none text-neutral-500">days before exam as practical</Label>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="new-module-practical-days"
+                        type="checkbox"
+                        checked={newModuleHasPracticalDays}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewModulePracticalDaysCount(practicalHint);
+                          }
+                          setNewModuleHasPracticalDays(e.target.checked);
+                        }}
+                        className="h-4 w-4 rounded border-neutral-300 accent-amber-600 dark:accent-amber-400 cursor-pointer"
+                      />
+                      <Label htmlFor="new-module-practical-days" className="text-xs cursor-pointer select-none">
+                        Mark last
+                      </Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={newModuleHasPracticalDays ? newModulePracticalDaysCount : ''}
+                        placeholder={String(practicalHint)}
+                        onChange={(e) => setNewModulePracticalDaysCount(Math.max(0, parseInt(e.target.value) || 0))}
+                        onKeyDown={(e) => e.key === 'Enter' && addModule()}
+                        disabled={!newModuleHasPracticalDays}
+                        className={cn("h-6 w-12 text-xs px-1.5 disabled:opacity-60", practicalExceeds && "border-amber-400 focus-visible:ring-amber-400")}
+                      />
+                      <Label className="text-xs select-none text-neutral-500">days before exam as practical</Label>
+                    </div>
+                    {practicalExceeds && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 pl-6">
+                        Exceeds available days — will be clamped to {practicalMax} on add.
+                      </p>
+                    )}
                   </div>
                 );
               })()}
@@ -785,6 +792,11 @@ export function ModuleSidebar({
           {formError && (
             <p className="text-sm text-red-500 -mt-1">{formError}</p>
           )}
+
+          <Button onClick={addModule} className="w-full" variant="default">
+            <Plus className="h-4 w-4 mr-2" />
+            {newModuleType === 'gap' ? 'Add Gap' : 'Add Module'}
+          </Button>
 
           <ScrollArea className="sm:h-[300px] pr-4">
             <div className="space-y-2 mt-4">

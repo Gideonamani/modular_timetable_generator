@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2026-04-17
+
+### Added
+- **Practical Days Validation**: When the practical days count exceeds the available days for a module (accounting for the exam day), an amber inline warning is shown: *"Exceeds available days — will be clamped to N on add."* The input border turns amber as a visual cue. The value is silently clamped to the maximum on save, so invalid data never reaches the calendar.
+
+### Changed
+- **Add Module Button**: Replaced the icon-only `+` button tucked into the Name/Days row with a full-width labelled **"+ Add Module"** / **"+ Add Gap"** button below all form fields, matching the visual width of the module cards below it.
+- **Enter Key on Practical Days Input**: Pressing Enter while focused in the practical days count field now submits the form, consistent with the Name, Days, and Instructor fields.
+
 ## [0.1.10] - 2026-04-17
 
 ### Changed
