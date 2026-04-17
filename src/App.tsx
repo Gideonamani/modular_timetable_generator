@@ -114,6 +114,7 @@ export default function App() {
             reorderModules={moduleState.reorderModules}
             duplicateModule={moduleState.duplicateModule}
             clearAllModules={moduleState.clearAllModules}
+            onClearTitleAndSubtitle={() => { setTimetableTitle(''); setTimetableSubtitle(''); }}
             canUndo={moduleState.canUndo}
             undoLastDelete={moduleState.undoLastDelete}
             newModuleName={moduleState.newModuleName} setNewModuleName={moduleState.setNewModuleName}

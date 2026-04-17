@@ -45,6 +45,7 @@ interface ModuleSidebarProps {
   reorderModules: (activeId: string, overId: string) => void;
   duplicateModule: (id: string) => void;
   clearAllModules: () => void;
+  onClearTitleAndSubtitle: () => void;
   canUndo: boolean;
   undoLastDelete: () => void;
   newModuleName: string;
@@ -267,7 +268,7 @@ export function ModuleSidebar({
   holidays, setHolidays,
   skipWeekends, setSkipWeekends,
   modules,
-  addModule, removeModule, updateModule, moveModule, reorderModules, duplicateModule, clearAllModules, canUndo, undoLastDelete,
+  addModule, removeModule, updateModule, moveModule, reorderModules, duplicateModule, clearAllModules, onClearTitleAndSubtitle, canUndo, undoLastDelete,
   newModuleName, setNewModuleName,
   newModuleDays, setNewModuleDays,
   newModuleInstructor, setNewModuleInstructor,
@@ -293,6 +294,7 @@ export function ModuleSidebar({
     if (clearPending) {
       // Second click within window — execute
       clearAllModules();
+      onClearTitleAndSubtitle();
       setClearPending(false);
       if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
     } else {
