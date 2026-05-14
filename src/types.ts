@@ -20,3 +20,20 @@ export type DaySchedule = {
 };
 
 export type ViewMode = 'list' | 'grid';
+
+export type AppTab = 'timetable' | 'invigilation';
+
+export type Invigilator = {
+  id: string;
+  name: string;
+  role?: string;
+};
+
+export type SessionAssignment = {
+  timeSlot?: 'morning' | 'afternoon' | 'evening' | 'custom';
+  startTime?: string; // "HH:mm"
+  duration?: number; // minutes
+  venue?: string;
+  leadInvigilatorId?: string;
+  additionalInvigilatorIds?: string[];
+};
