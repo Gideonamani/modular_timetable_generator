@@ -20,3 +20,31 @@ export type DaySchedule = {
 };
 
 export type ViewMode = 'list' | 'grid';
+
+export type AppTab = 'timetable' | 'invigilation';
+
+export type Invigilator = {
+  id: string;
+  name: string;
+  role?: string;
+};
+
+export type SessionAssignment = {
+  timeSlot?: 'morning' | 'afternoon' | 'evening' | 'custom';
+  startTime?: string; // "HH:mm"
+  duration?: number; // minutes
+  venue?: string;
+  leadInvigilatorId?: string;
+  additionalInvigilatorIds?: string[];
+};
+
+export type ExamDay = {
+  date: string; // "YYYY-MM-DD"
+  included: boolean;
+};
+
+export type ExamPeriod = {
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string;   // "YYYY-MM-DD"
+  days: ExamDay[];
+};
