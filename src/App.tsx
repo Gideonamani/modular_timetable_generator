@@ -12,6 +12,7 @@ import { useModules } from "./hooks/useModules";
 import { useGoogleSheets } from "./hooks/useGoogleSheets";
 import { useExports } from "./hooks/useExports";
 import { useInvigilation } from "./hooks/useInvigilation";
+import { useExamPeriod } from "./hooks/useExamPeriod";
 import { useDebouncedEffect } from "./hooks/useDebouncedEffect";
 import { getStateFromUrl } from "./lib/url-state";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ export default function App() {
     saved?.invigilators ?? [],
     saved?.sessionAssignments ?? {}
   );
+  const examPeriodState = useExamPeriod(saved?.examPeriod ?? null);
 
   const schedule = React.useMemo(
     () => generateSchedule(startDate, endDate, moduleState.modules, skipWeekends, holidays),
@@ -103,12 +105,14 @@ export default function App() {
       sheetUrl: sheetsState.sheetUrl,
       invigilators: invigilationState.invigilators,
       sessionAssignments: invigilationState.assignments,
+      examPeriod: examPeriodState.examPeriod,
     }));
   }, [
     activeTab, startDate, endDate, skipWeekends, holidays,
     viewMode, timetableTitle, timetableSubtitle,
     moduleState.modules, isDarkMode, sheetsState.sheetUrl,
     invigilationState.invigilators, invigilationState.assignments,
+    examPeriodState.examPeriod,
   ], 500);
 
   const tabs: { id: AppTab; label: string }[] = [
@@ -203,14 +207,18 @@ export default function App() {
         ) : (
           <ErrorBoundary>
             <InvigilationPage
-              schedule={schedule}
+              examPeriod={examPeriodState.examPeriod}
+              onSetExamPeriodDates={examPeriodState.setExamPeriodDates}
+              onToggleDay={examPeriodState.toggleDay}
+              onAddDay={examPeriodState.addDay}
+              onRemoveDay={examPeriodState.removeDay}
+              onClearExamPeriod={examPeriodState.clearExamPeriod}
               invigilators={invigilationState.invigilators}
               assignments={invigilationState.assignments}
               addInvigilator={invigilationState.addInvigilator}
               removeInvigilator={invigilationState.removeInvigilator}
               updateAssignment={invigilationState.updateAssignment}
               isDarkMode={isDarkMode}
-              timetableTitle={timetableTitle}
             />
           </ErrorBoundary>
         )}

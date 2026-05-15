@@ -1,13 +1,14 @@
 import * as React from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   UserPlus, Trash2, AlertTriangle, Download, Users, ChevronDown,
+  CalendarDays, Plus, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DaySchedule, Invigilator, SessionAssignment } from "../types";
+import { ExamPeriod, Invigilator, SessionAssignment } from "../types";
 
 // ─── Time slot presets ───────────────────────────────────────────────────────
 
@@ -80,16 +81,16 @@ function findConflicts(
 // ─── CSV export ───────────────────────────────────────────────────────────────
 
 function exportCSV(
-  sessions: { key: string; day: DaySchedule }[],
+  sessions: { key: string; date: string }[],
   assignments: Record<string, SessionAssignment>,
   invigilators: Invigilator[],
 ) {
   const invMap = Object.fromEntries(invigilators.map(i => [i.id, i.name]));
   const rows: string[][] = [
-    ['Date', 'Day', 'Module', 'Instructor', 'Time Slot', 'Start Time', 'Duration (min)', 'Venue', 'Lead Invigilator', 'Additional Invigilators'],
+    ['Date', 'Day', 'Time Slot', 'Start Time', 'Duration (min)', 'Venue', 'Lead Invigilator', 'Additional Invigilators'],
   ];
 
-  for (const { key, day } of sessions) {
+  for (const { key, date } of sessions) {
     const a = assignments[key] ?? {};
     const preset = a.timeSlot && a.timeSlot !== 'custom' ? PRESET_SLOTS[a.timeSlot as PresetKey] : null;
     const slotLabel = a.timeSlot
@@ -97,12 +98,11 @@ function exportCSV(
       : '';
     const startTime = a.timeSlot === 'custom' ? (a.startTime ?? '') : (preset?.startTime ?? '');
     const duration = a.timeSlot === 'custom' ? String(a.duration ?? '') : (preset ? String(preset.duration) : '');
+    const dateObj = parseISO(date);
 
     rows.push([
-      format(day.date, 'yyyy-MM-dd'),
-      format(day.date, 'EEEE'),
-      day.module?.name ?? '',
-      day.module?.instructor ?? '',
+      format(dateObj, 'yyyy-MM-dd'),
+      format(dateObj, 'EEEE'),
       slotLabel,
       startTime,
       duration,
@@ -246,49 +246,278 @@ function AdditionalInvigilatorsCell({
   );
 }
 
+// ─── Exam Period Panel ────────────────────────────────────────────────────────
+
+function ExamPeriodPanel({
+  examPeriod,
+  onSetPeriod,
+  onToggleDay,
+  onAddDay,
+  onRemoveDay,
+  onClear,
+}: {
+  examPeriod: ExamPeriod | null;
+  onSetPeriod: (start: string, end: string) => void;
+  onToggleDay: (date: string) => void;
+  onAddDay: (date: string) => void;
+  onRemoveDay: (date: string) => void;
+  onClear: () => void;
+}) {
+  const [draftStart, setDraftStart] = React.useState(examPeriod?.startDate ?? '');
+  const [draftEnd, setDraftEnd] = React.useState(examPeriod?.endDate ?? '');
+  const [isEditing, setIsEditing] = React.useState(examPeriod === null);
+  const [addDayValue, setAddDayValue] = React.useState('');
+  const [showDays, setShowDays] = React.useState(false);
+  const [dateError, setDateError] = React.useState('');
+
+  const handleSetPeriod = () => {
+    if (!draftStart || !draftEnd) {
+      setDateError('Both dates are required');
+      return;
+    }
+    if (draftStart > draftEnd) {
+      setDateError('Start date must be before end date');
+      return;
+    }
+    setDateError('');
+    onSetPeriod(draftStart, draftEnd);
+    setIsEditing(false);
+    setShowDays(true);
+  };
+
+  const handleAddDay = () => {
+    if (!addDayValue) return;
+    onAddDay(addDayValue);
+    setAddDayValue('');
+  };
+
+  const activeCount = examPeriod?.days.filter(d => d.included).length ?? 0;
+  const totalCount = examPeriod?.days.length ?? 0;
+
+  // Setup / edit form
+  if (!examPeriod || isEditing) {
+    return (
+      <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm space-y-4">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-neutral-500" />
+          <h3 className="font-semibold text-sm dark:text-neutral-100">
+            {isEditing && examPeriod ? 'Edit Exam Period' : 'Set Up Exam Period'}
+          </h3>
+        </div>
+        {!examPeriod && (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Choose a start and end date to generate your exam days. This is independent of the module timetable.
+          </p>
+        )}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Start Date</label>
+            <Input
+              type="date"
+              value={draftStart}
+              onChange={e => { setDraftStart(e.target.value); setDateError(''); }}
+              className="h-8 text-sm w-auto"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">End Date</label>
+            <Input
+              type="date"
+              value={draftEnd}
+              onChange={e => { setDraftEnd(e.target.value); setDateError(''); }}
+              className="h-8 text-sm w-auto"
+            />
+          </div>
+          <div className="flex items-center gap-2 pb-0.5">
+            <Button size="sm" className="h-8" onClick={handleSetPeriod}>
+              <CalendarDays className="h-3.5 w-3.5 mr-1.5" />
+              {isEditing && examPeriod ? 'Update Period' : 'Generate Days'}
+            </Button>
+            {isEditing && examPeriod && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                onClick={() => { setIsEditing(false); setDateError(''); }}
+              >
+                Cancel
+              </Button>
+            )}
+          </div>
+        </div>
+        {dateError && <p className="text-xs text-red-500">{dateError}</p>}
+      </div>
+    );
+  }
+
+  // Info header + day list
+  return (
+    <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
+      <div className="p-4 flex flex-wrap items-center gap-3">
+        <CalendarDays className="h-4 w-4 text-neutral-500 shrink-0" />
+        <div className="flex-1 min-w-0 text-sm">
+          <span className="font-semibold dark:text-neutral-100">Exam Period</span>
+          <span className="mx-2 text-neutral-300 dark:text-neutral-600">·</span>
+          <span className="text-neutral-600 dark:text-neutral-300">
+            {format(parseISO(examPeriod.startDate), 'dd MMM yyyy')}
+            {' – '}
+            {format(parseISO(examPeriod.endDate), 'dd MMM yyyy')}
+          </span>
+          <span className="mx-2 text-neutral-300 dark:text-neutral-600">·</span>
+          <span className="text-neutral-600 dark:text-neutral-300">
+            <span className="font-medium text-neutral-800 dark:text-neutral-200">{activeCount}</span>
+            {' '}active day{activeCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={() => setShowDays(v => !v)}
+            className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 px-2 py-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            Manage days
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", showDays && "rotate-180")} />
+          </button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs dark:text-neutral-300 dark:hover:bg-neutral-800"
+            onClick={() => {
+              setDraftStart(examPeriod.startDate);
+              setDraftEnd(examPeriod.endDate);
+              setIsEditing(true);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 dark:text-red-400"
+            onClick={onClear}
+          >
+            Clear
+          </Button>
+        </div>
+      </div>
+
+      {showDays && (
+        <div className="border-t border-neutral-100 dark:border-neutral-800 p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              {activeCount} of {totalCount} days active
+            </span>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={addDayValue}
+                onChange={e => setAddDayValue(e.target.value)}
+                className="h-7 text-xs w-auto"
+                title="Add a custom exam day"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                onClick={handleAddDay}
+                disabled={!addDayValue}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Day
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-0.5 max-h-52 overflow-y-auto pr-0.5">
+            {examPeriod.days.map(day => (
+              <div
+                key={day.date}
+                className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 group"
+              >
+                <input
+                  type="checkbox"
+                  checked={day.included}
+                  onChange={() => onToggleDay(day.date)}
+                  className="rounded border-neutral-300 dark:border-neutral-600 shrink-0"
+                />
+                <span className={cn(
+                  "text-sm flex-1",
+                  day.included
+                    ? "text-neutral-800 dark:text-neutral-200"
+                    : "text-neutral-400 dark:text-neutral-600 line-through"
+                )}>
+                  {format(parseISO(day.date), 'EEE, dd MMM yyyy')}
+                </span>
+                {!day.included && (
+                  <span className="text-xs text-neutral-400 dark:text-neutral-500 italic">excluded</span>
+                )}
+                <button
+                  onClick={() => onRemoveDay(day.date)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-red-500 dark:hover:text-red-400 p-0.5 rounded"
+                  title="Remove this day"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface InvigilationPageProps {
-  schedule: DaySchedule[];
+  examPeriod: ExamPeriod | null;
+  onSetExamPeriodDates: (startDate: string, endDate: string) => void;
+  onToggleDay: (date: string) => void;
+  onAddDay: (date: string) => void;
+  onRemoveDay: (date: string) => void;
+  onClearExamPeriod: () => void;
   invigilators: Invigilator[];
   assignments: Record<string, SessionAssignment>;
   addInvigilator: (name: string, role?: string) => void;
   removeInvigilator: (id: string) => void;
   updateAssignment: (sessionKey: string, patch: Partial<SessionAssignment>) => void;
   isDarkMode: boolean;
-  timetableTitle: string;
 }
 
 export function InvigilationPage({
-  schedule,
+  examPeriod,
+  onSetExamPeriodDates,
+  onToggleDay,
+  onAddDay,
+  onRemoveDay,
+  onClearExamPeriod,
   invigilators,
   assignments,
   addInvigilator,
   removeInvigilator,
   updateAssignment,
-  timetableTitle,
 }: InvigilationPageProps) {
   const [newName, setNewName] = React.useState('');
   const [newRole, setNewRole] = React.useState('');
   const [nameError, setNameError] = React.useState('');
 
-  // Derive exam sessions from schedule
+  // Derive exam sessions from the exam period (not from timetable schedule)
+  const activeDays = React.useMemo(
+    () => (examPeriod?.days ?? [])
+      .filter(d => d.included)
+      .sort((a, b) => a.date.localeCompare(b.date)),
+    [examPeriod]
+  );
+
   const examSessions = React.useMemo(
-    () =>
-      schedule
-        .filter(d => d.isExamDay && d.module)
-        .map(day => ({
-          key: `${day.module!.id}_${format(day.date, 'yyyy-MM-dd')}`,
-          day,
-        })),
-    [schedule]
+    () => activeDays.map(day => ({ key: day.date, date: day.date })),
+    [activeDays]
   );
 
   // Conflict detection
   const conflictKeys = React.useMemo(() => {
-    const sessions = examSessions.map(({ key, day }) => ({
+    const sessions = examSessions.map(({ key, date }) => ({
       key,
-      date: format(day.date, 'yyyy-MM-dd'),
+      date,
       assignment: assignments[key] ?? {},
     }));
     return findConflicts(sessions);
@@ -318,11 +547,16 @@ export function InvigilationPage({
           <div>
             <h2 className="text-lg font-semibold dark:text-neutral-100">Invigilation Plan</h2>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              {timetableTitle}
-              {' '}·{' '}
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">{examSessions.length}</span> exam{examSessions.length !== 1 ? 's' : ''}
-              {' '}·{' '}
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">{configuredCount}</span> configured
+              {examPeriod ? (
+                <>
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">{examSessions.length}</span>
+                  {' '}exam day{examSessions.length !== 1 ? 's' : ''}
+                  {' '}·{' '}
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">{configuredCount}</span> configured
+                </>
+              ) : (
+                'Set up an exam period to begin'
+              )}
               {conflictKeys.size > 0 && (
                 <span className="ml-2 text-red-500 font-medium">
                   · {conflictKeys.size} conflict{conflictKeys.size !== 1 ? 's' : ''}
@@ -341,6 +575,16 @@ export function InvigilationPage({
           </Button>
         </div>
       </div>
+
+      {/* Exam period setup / info */}
+      <ExamPeriodPanel
+        examPeriod={examPeriod}
+        onSetPeriod={onSetExamPeriodDates}
+        onToggleDay={onToggleDay}
+        onAddDay={onAddDay}
+        onRemoveDay={onRemoveDay}
+        onClear={onClearExamPeriod}
+      />
 
       {/* Conflict banner */}
       {conflictKeys.size > 0 && (
@@ -429,11 +673,19 @@ export function InvigilationPage({
         {/* ── Exam sessions table ──────────────────────────────────────────── */}
         <div className="lg:col-span-8">
           <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm overflow-hidden">
-            {examSessions.length === 0 ? (
+            {!examPeriod ? (
               <div className="p-12 text-center space-y-2">
-                <p className="text-neutral-500 dark:text-neutral-400 font-medium text-sm">No exam sessions found</p>
+                <CalendarDays className="h-8 w-8 text-neutral-300 dark:text-neutral-600 mx-auto" />
+                <p className="text-neutral-500 dark:text-neutral-400 font-medium text-sm">No exam period set</p>
                 <p className="text-neutral-400 dark:text-neutral-500 text-sm">
-                  Enable exam days on your modules in the Timetable tab.
+                  Set up an exam period above to start assigning invigilators.
+                </p>
+              </div>
+            ) : examSessions.length === 0 ? (
+              <div className="p-12 text-center space-y-2">
+                <p className="text-neutral-500 dark:text-neutral-400 font-medium text-sm">No active exam days</p>
+                <p className="text-neutral-400 dark:text-neutral-500 text-sm">
+                  Enable days in the Exam Period panel above.
                 </p>
               </div>
             ) : (
@@ -442,7 +694,6 @@ export function InvigilationPage({
                   <thead>
                     <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50">
                       <th className="text-left p-3 text-xs font-semibold text-neutral-600 dark:text-neutral-400 whitespace-nowrap">Date</th>
-                      <th className="text-left p-3 text-xs font-semibold text-neutral-600 dark:text-neutral-400">Module</th>
                       <th className="text-left p-3 text-xs font-semibold text-neutral-600 dark:text-neutral-400 whitespace-nowrap">Time Slot</th>
                       <th className="text-left p-3 text-xs font-semibold text-neutral-600 dark:text-neutral-400">Venue</th>
                       <th className="text-left p-3 text-xs font-semibold text-neutral-600 dark:text-neutral-400 whitespace-nowrap">Lead Invigilator</th>
@@ -450,9 +701,10 @@ export function InvigilationPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {examSessions.map(({ key, day }) => {
+                    {examSessions.map(({ key, date }) => {
                       const a = assignments[key] ?? {};
                       const isConflict = conflictKeys.has(key);
+                      const dateObj = parseISO(date);
 
                       return (
                         <tr
@@ -472,31 +724,11 @@ export function InvigilationPage({
                               )}
                               <div>
                                 <div className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                  {format(day.date, 'dd MMM')}
+                                  {format(dateObj, 'dd MMM')}
                                 </div>
                                 <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                                  {format(day.date, 'EEE, yyyy')}
+                                  {format(dateObj, 'EEE, yyyy')}
                                 </div>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Module */}
-                          <td className="p-3 align-top">
-                            <div className="flex items-start gap-2">
-                              <div
-                                className="w-2.5 h-2.5 rounded-full shrink-0 mt-1"
-                                style={{ backgroundColor: day.module?.color }}
-                              />
-                              <div className="min-w-0">
-                                <div className="font-medium dark:text-neutral-200 leading-tight truncate max-w-[140px]">
-                                  {day.module?.name}
-                                </div>
-                                {day.module?.instructor && (
-                                  <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate max-w-[140px]">
-                                    {day.module.instructor}
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </td>

@@ -37,3 +37,14 @@ export type SessionAssignment = {
   leadInvigilatorId?: string;
   additionalInvigilatorIds?: string[];
 };
+
+export type ExamDay = {
+  date: string; // "YYYY-MM-DD"
+  included: boolean;
+};
+
+export type ExamPeriod = {
+  startDate: string; // "YYYY-MM-DD"
+  endDate: string;   // "YYYY-MM-DD"
+  days: ExamDay[];
+};
